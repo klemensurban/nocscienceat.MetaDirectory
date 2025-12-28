@@ -4,51 +4,94 @@
 
     public sealed class IdmUser
     {
-        private string? _mail;
         private string? _bpkBf;
+        private string? _givenName;
         private string? _jobRole;
+        private string? _mail;
+        private string? _mobile;
+        private string? _room;
+        private string? _sn;
+        private string? _streetAddress;
+        private string? _telephoneNumber;
+        private string? _title;
+        private string? _topLevelUnits;
 
-        public string? Sn { get; set; }
-        public string? GivenName { get; set; }
-        public string? Title { get; set; }
+        public string SapPersNr { get; set; } = null!;      // SAP-ID: Key to Synchronize
 
         public string? BpkBf
         {
             get => _bpkBf;
-            set => _bpkBf = value is not null ? IdmUserService.BpkPrefix + value : null;
+            set => _bpkBf = !string.IsNullOrWhiteSpace(value) ? IdmUserService.BpkPrefix + value!.Trim() : null;
+        }
+
+        public string? GivenName
+        {
+            get => _givenName;
+            set => _givenName = NormalizeString(value);
+        }
+
+        public string? JobRole                              // extensionAttribute14
+        {
+            get => _jobRole;
+            set => _jobRole = !string.IsNullOrWhiteSpace(value) ? value!.ToLowerInvariant() : null;
         }
 
         public string? Mail
         {
             get =>  _mail;
-            set => _mail = value?.ToLowerInvariant();
+            set => _mail = !string.IsNullOrWhiteSpace(value) ? value!.ToLowerInvariant().Trim() : null;
         }
-        public string? StreetAddress { get; set; }          // extensionAttribute5
-        public string? Room { get; set; }                   // extensionAttribute6
-        public string SapPersNr { get; set; } = null!;
 
-        public string? JobRole                              // extensionAttribute14
+        public string? Mobile
         {
-            get => _jobRole;
-            set => _jobRole = value?.ToLowerInvariant();
+            get => _mobile;
+            set => _mobile = NormalizeString(value);
+        }
+
+        public string? Room                                 // extensionAttribute6
+        {
+            get => _room;
+            set => _room = NormalizeString(value);
         } 
 
-        public string? TopLevelUnits { get; set; }          // extensionAttribute7
-        public string? TelephoneNumber { get; set; }
-        public string? Mobile { get; set; }
+        public string? Sn
+        {
+            get => _sn;
+            set => _sn = NormalizeString(value);
+        }
+
+        public string? StreetAddress                        // extensionAttribute5
+        {
+            get => _streetAddress;
+            set => _streetAddress = NormalizeString(value);
+        } 
+
+        public string? TelephoneNumber
+        {
+            get => _telephoneNumber;
+            set => _telephoneNumber = NormalizeString(value);
+        }
+
+        public string? Title
+        {
+            get => _title;
+            set => _title = NormalizeString(value);
+        }
+
+        public string? TopLevelUnits                        // extensionAttribute7
+        {
+            get => _topLevelUnits;
+            set => _topLevelUnits = NormalizeString(value);
+        } 
+
+        private static string? NormalizeString(string? value)
+        {
+            return !string.IsNullOrWhiteSpace(value) ? value!.Trim() : null;
+        }
 
         public override string ToString()
         {
-            string? sn = string.IsNullOrWhiteSpace(Sn) ? null : Sn;
-            string? givenName = string.IsNullOrWhiteSpace(GivenName) ? null : GivenName;
-
-            if (sn == null && givenName == null)
-                return nameof(IdmUser);
-
-            if (sn != null && givenName != null)
-                return $"{sn} {givenName}";
-
-            return sn ?? givenName!;
+            return Sn == null && GivenName == null ? nameof(IdmUser) : Sn != null && GivenName != null ? $"{Sn} {GivenName}" : Sn ?? GivenName!;
         }
     }
 }

@@ -19,6 +19,7 @@ try
         .ConfigureAppConfiguration((hostingContext, config) =>
         {
             config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddJsonFile("secrets.json", optional: true, reloadOnChange: true)
                 .AddEnvironmentVariables()
                 .AddCommandLine(args);
         })
@@ -58,7 +59,3 @@ finally
 {
     Log.CloseAndFlush();
 }
-
-
-
-

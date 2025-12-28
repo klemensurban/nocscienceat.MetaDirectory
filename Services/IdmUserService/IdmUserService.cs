@@ -43,7 +43,6 @@ namespace nocscienceat.MetaDirectory.Services.IdmUserService
             {
                 SqlConnection connection = new(_idmUserServiceSettings.ConnectionString!);
                 using (connection)
-                using (SqlCommand command = new SqlCommand(sql, connection))
                 {
                     return await connection.QueryAsync<IdmUser>(sql);
                 }
