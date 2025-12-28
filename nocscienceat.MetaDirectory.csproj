@@ -211,6 +211,10 @@
     <Compile Include="IsExternalInit\IsExternalInit.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\AdService\AdService.cs" />
+    <Compile Include="Services\AdService\IAdService.cs" />
+    <Compile Include="Services\AdService\Models\AdServiceSettings.cs" />
+    <Compile Include="Services\AdService\Models\AdUser.cs" />
     <Compile Include="Services\IdmUserService\IdmUserService.cs" />
     <Compile Include="Services\IdmUserService\IIdmUserService.cs" />
     <Compile Include="Services\IdmUserService\Models\IdmUser.cs" />
@@ -224,6 +228,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />
+    <None Include="secrets.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.8">
@@ -237,6 +244,7 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

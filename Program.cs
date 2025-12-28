@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using nocscienceat.MetaDirectory;
+using nocscienceat.MetaDirectory.Services.AdService;
 using nocscienceat.MetaDirectory.Services.IdmUserService;
 using nocscienceat.MetaDirectory.Services.UserSyncService;
 using Serilog;
@@ -16,7 +17,7 @@ try
 {
     IHost host = Host.CreateDefaultBuilder(args)
 
-        .ConfigureAppConfiguration((hostingContext, config) =>
+        .ConfigureAppConfiguration((_, config) =>
         {
             config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .AddJsonFile("secrets.json", optional: true, reloadOnChange: true)
@@ -30,6 +31,7 @@ try
 
             services.AddSingleton<IUserSyncService, UserSyncService>();
             services.AddSingleton<IIdmUserService, IdmUserService>();
+            services.AddSingleton<IAdService, AdService>();
 
             services.AddSingleton<Dispatcher>();
         })
