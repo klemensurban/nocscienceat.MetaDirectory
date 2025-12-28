@@ -1,15 +1,12 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using nocscienceat.MetaDirectory.Services.IdmUserService;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using nocscienceat.MetaDirectory.Services.IdmUserService.Models;
 using nocscienceat.CudManager2;
 using nocscienceat.MetaDirectory.Services.AdService;
 using nocscienceat.MetaDirectory.Services.AdService.Models;
+using nocscienceat.MetaDirectory.Services.IdmUserService;
+using nocscienceat.MetaDirectory.Services.IdmUserService.Models;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace nocscienceat.MetaDirectory.Services.UserSyncService
 {
@@ -31,7 +28,10 @@ namespace nocscienceat.MetaDirectory.Services.UserSyncService
         {
             IEnumerable<IdmUser> idmUsers = await _idmUserService.GetUsersAsync();
             IEnumerable<AdUser> adUsers = _adService.GetAdUsers();
-            var a = 1; // Placeholder for further implementation
+            CudManager<string, IdmUser, AdUser> userCudManager = new CudManager<string, IdmUser, AdUser>(new UserCudDataAdapter(), idmUsers, adUsers);
+            var a = userCudManager.Items2Create;
+
+
         }
     }
 }
