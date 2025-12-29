@@ -10,5 +10,6 @@ namespace nocscienceat.MetaDirectory.Services.AdService
     public interface IAdService
     {
         IEnumerable<AdUser> GetAdUsers();
+        void UpdateAdUser(AdUser adUser, IEnumerable<string> attributeNames);
     }
 }

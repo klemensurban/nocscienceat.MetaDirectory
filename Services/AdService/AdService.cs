@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.DirectoryServices;
 using System.DirectoryServices.AccountManagement;
+using System.Reflection;
 
 
 namespace nocscienceat.MetaDirectory.Services.AdService
@@ -16,7 +17,8 @@ namespace nocscienceat.MetaDirectory.Services.AdService
 
         public AdService(IConfiguration configuration, ILogger<AdService> logger)
         {
-            _adServiceSettings = configuration.GetSection("AdService").Get<AdServiceSettings>() ?? throw new ArgumentNullException(nameof(AdServiceSettings));
+            _adServiceSettings = configuration.GetSection("AdService").Get<AdServiceSettings>() ??
+                                 throw new ArgumentNullException(nameof(AdServiceSettings));
             _logger = logger;
         }
 
@@ -30,12 +32,17 @@ namespace nocscienceat.MetaDirectory.Services.AdService
                     using PrincipalContext ctx = new(ContextType.Domain, null, directorySearch.Dn);
                     using PrincipalSearcher principalSearcher = new();
                     principalSearcher.QueryFilter = new UserPrincipal(ctx);
-                    using DirectorySearcher searcher = (DirectorySearcher)principalSearcher.GetUnderlyingSearcher();
-                    searcher.SearchScope = directorySearch.SearchScopeSubtree ? SearchScope.Subtree : SearchScope.OneLevel;
+                    using DirectorySearcher searcher = (DirectorySearcher) principalSearcher.GetUnderlyingSearcher();
+                    searcher.SearchScope =
+                        directorySearch.SearchScopeSubtree ? SearchScope.Subtree : SearchScope.OneLevel;
                     searcher.PageSize = 1000;
                     searcher.PropertiesToLoad.Clear();
-                    searcher.PropertiesToLoad.AddRange(new[] {"SamAccountName", "distinguishedname", "SAPPersNr", "bPKBF", 
-                        "sn", "GivenName", "mail", "telephonenumber", "mobile", "title", "extensionAttribute5", "extensionAttribute6", "extensionAttribute7", "extensionAttribute14" });
+                    searcher.PropertiesToLoad.AddRange(new[]
+                    {
+                        "SamAccountName", "distinguishedname", "SAPPersNr", "bPKBF",
+                        "sn", "GivenName", "mail", "telephonenumber", "mobile", "title", "extensionAttribute5",
+                        "extensionAttribute6", "extensionAttribute7", "extensionAttribute14"
+                    });
                     using SearchResultCollection resultCollection = searcher.FindAll();
                     foreach (SearchResult searchResult in resultCollection)
                     {
@@ -46,7 +53,8 @@ namespace nocscienceat.MetaDirectory.Services.AdService
                         }
                         else
                         {
-                            _logger.LogDebug("AD user with SamAccountName '{SamAccountName}' has null or whitespace SapPersNr. SearchResult DN: '{DistinguishedName}'",
+                            _logger.LogDebug(
+                                "AD user with SamAccountName '{SamAccountName}' has null or whitespace SapPersNr. SearchResult DN: '{DistinguishedName}'",
                                 adUser.SamAccountName, adUser.DistinguishedName);
                         }
                     }
@@ -63,16 +71,16 @@ namespace nocscienceat.MetaDirectory.Services.AdService
             }
         }
 
-        private string? GetPropertyValue(SearchResult searchResult, string propertyName)
+        private static string? GetPropertyValue(SearchResult searchResult, string propertyName)
         {
             return searchResult.Properties[propertyName]?.Count > 0
                 ? searchResult.Properties[propertyName][0]?.ToString()
                 : null;
         }
 
-        private AdUser MapSearchResult2AdUser(SearchResult searchResult)
+        private static AdUser MapSearchResult2AdUser(SearchResult searchResult)
         {
-            AdUser adUser = new AdUser
+            AdUser adUser = new()
             {
                 SamAccountName = GetPropertyValue(searchResult, "SamAccountName"),
                 DistinguishedName = GetPropertyValue(searchResult, "distinguishedname"),
@@ -91,6 +99,58 @@ namespace nocscienceat.MetaDirectory.Services.AdService
             };
             return adUser;
         }
+
+        public void UpdateAdUser(AdUser adUser, IEnumerable<string> attributeNames)
+        {
+            foreach (string attributeName in attributeNames)
+            {
+                string attributeValue = string.Empty;
+                switch (attributeName)
+                {
+
+                    case nameof(AdUser.SapPersNr):
+                        break;
+                    case nameof(AdUser.BpkBf):
+                        break;
+                    case nameof(AdUser.Sn):
+                        attributeValue = adUser.Sn ?? string.Empty;
+                        break;
+                    case nameof(AdUser.GivenName):
+                        attributeValue = adUser.GivenName ?? string.Empty;
+                        break;
+                    case nameof(AdUser.Mail):
+                        // Update logic for Mail
+                        break;
+                    case nameof(AdUser.TelephoneNumber):
+                        // Update logic for TelephoneNumber
+                        break;
+                    case nameof(AdUser.Mobile):
+                        // Update logic for Mobile
+                        break;
+                    case nameof(AdUser.Title):
+                        // Update logic for Title
+                        break;
+                    case nameof(AdUser.StreetAddress):
+                        // Update logic for StreetAddress
+                        break;
+                    case nameof(AdUser.Room):
+                        // Update logic for Room
+                        break;
+                    case nameof(AdUser.TopLevelUnits):
+                        attributeValue = adUser.TopLevelUnits ?? string.Empty;
+                        break;
+                    case nameof(AdUser.JobRole):
+                        // Update logic for JobRole
+                        break;
+                    default:
+                        _logger.LogWarning("Unknown attribute '{AttributeName}' for AD user '{SamAccountName}'", attributeName, adUser.SamAccountName);
+                        break;
+                }
+
+                _logger.LogInformation("Updating AD user '{DN}': Attribute '{AttributeName}' with Attribute Value '{AttributeValue}'",
+                    adUser.DistinguishedName, attributeName, attributeValue);
+                // Placeholder for actual AD user update logic
+            }
+        }
     }
-    
 }

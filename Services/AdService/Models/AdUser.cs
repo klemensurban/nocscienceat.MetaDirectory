@@ -1,7 +1,15 @@
 ﻿namespace nocscienceat.MetaDirectory.Services.AdService.Models
 {
     public class AdUser
-    {
+    { 
+        public AdUser() {}
+
+        public AdUser(AdUser cloneSource)
+        {
+            DistinguishedName = cloneSource.DistinguishedName;
+            SamAccountName = cloneSource.SamAccountName;
+        }
+
         public string? SamAccountName { get; set; }
         public string? DistinguishedName { get; set; }
         public string? SapPersNr { get; set; }

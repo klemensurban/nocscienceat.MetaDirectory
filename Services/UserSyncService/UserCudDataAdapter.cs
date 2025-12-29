@@ -9,15 +9,24 @@ namespace nocscienceat.MetaDirectory.Services.UserSyncService
 {
     internal class UserCudDataAdapter: ICudDataAdapter<string, IdmUser, AdUser>
     {
-        public ComparisonResult Compare(IdmUser sourceItem, AdUser sync2Item)
+        public ComparisonResult<AdUser> Compare(IdmUser sourceItem, AdUser sync2Item)
         {
-            var differingProps = new List<string>();
+            List<string> differingProps = new();
+
+            // Create with original as Template for DN and SAMAccountName retention
+            AdUser sync2ItemUpdated = new(sync2Item);
 
             if (!string.Equals(sourceItem.GivenName, sync2Item.GivenName))
-                differingProps.Add(nameof(sourceItem.GivenName));
+            {
+                sync2ItemUpdated.GivenName = sourceItem.GivenName;
+                differingProps.Add(nameof(sync2ItemUpdated.GivenName));
+            }
 
             if (!string.Equals(sourceItem.Sn, sync2Item.Sn))
-                differingProps.Add(nameof(sourceItem.Sn));
+            {
+                sync2ItemUpdated.Sn = sourceItem.Sn;
+                differingProps.Add(nameof(sync2ItemUpdated.Sn));
+            }
 
             /*
             if (!string.Equals(sourceItem.Mail, sync2Item.Mail, StringComparison.InvariantCultureIgnoreCase))
@@ -41,10 +50,13 @@ namespace nocscienceat.MetaDirectory.Services.UserSyncService
                 differingProps.Add(nameof(sourceItem.Room));
             */
 
-            /*
+
             if (!string.Equals(sourceItem.TopLevelUnits, sync2Item.TopLevelUnits))
-                differingProps.Add(nameof(sourceItem.TopLevelUnits));
-            */
+            {
+                sync2ItemUpdated.TopLevelUnits = sourceItem.TopLevelUnits;
+                differingProps.Add(nameof(sync2ItemUpdated.TopLevelUnits));
+            }
+
 
             /*
             if (!string.Equals(sourceItem.JobRole, sync2Item.JobRole))
@@ -52,12 +64,15 @@ namespace nocscienceat.MetaDirectory.Services.UserSyncService
             */
 
             if (!string.Equals(sourceItem.BpkBf, sync2Item.BpkBf))
-                differingProps.Add(nameof(sourceItem.BpkBf));
+            {
+                sync2ItemUpdated.BpkBf = sourceItem.BpkBf;
+                differingProps.Add(nameof(sync2ItemUpdated.BpkBf));
+            }
 
             if (differingProps.Count == 0)
-                return new ComparisonResult.IsEqual();
+                return new ComparisonResult<AdUser>.IsEqual();
 
-            return new ComparisonResult.DiffersBy { Properties = differingProps };
+            return new ComparisonResult<AdUser>.DiffersBy { Properties = differingProps, SyncItemUpdated = sync2ItemUpdated };
         }
 
         public string GetKeyFromSourceItem(IdmUser sourceItem)
