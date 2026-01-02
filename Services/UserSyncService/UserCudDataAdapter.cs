@@ -41,17 +41,21 @@ namespace nocscienceat.MetaDirectory.Services.UserSyncService
                 differingProps.Add(nameof(sync2ItemUpdated.Mail));
             }
 
-            /*
-            if (!string.Equals(sourceItem.TelephoneNumber, sync2Item.TelephoneNumber))
-                differingProps.Add(nameof(sourceItem.TelephoneNumber));
 
+            if (!string.Equals(sourceItem.TelephoneNumber, sync2Item.TelephoneNumber))
+            {
+                sync2ItemUpdated.TelephoneNumber = sourceItem.TelephoneNumber;
+                differingProps.Add(nameof(sync2ItemUpdated.TelephoneNumber));
+            }
+
+            /*
             if (!string.Equals(sourceItem.Mobile, sync2Item.Mobile))
                 differingProps.Add(nameof(sourceItem.Mobile));
 
             if (!string.Equals(sourceItem.Title, sync2Item.Title))
                 differingProps.Add(nameof(sourceItem.Title));
             */
-            
+
             // Check if sourceItem.Room is not null and equals "999"
             string? room;
             string? streetAddress;

@@ -13,6 +13,14 @@ namespace nocscienceat.MetaDirectory.Services.AdService
         private readonly AdServiceSettings _adServiceSettings;
         private readonly ILogger<AdService> _logger;
 
+        private const string AttributeNameStreetAddress = "extensionAttribute5";
+        private const string AttributeNameRoom = "extensionAttribute6";
+        private const string AttributeNameTopLevelUnits = "extensionAttribute7";
+        private const string AttributeNameJobRole = "extensionAttribute14";
+        private const string AttributeNameBpkBf = "bPKBF";
+        private const string AttributeNameSapPersNr = "SAPPersNr";
+
+
         public AdService(IConfiguration configuration, ILogger<AdService> logger)
         {
             _adServiceSettings = configuration.GetSection("AdService").Get<AdServiceSettings>() ??
@@ -31,15 +39,14 @@ namespace nocscienceat.MetaDirectory.Services.AdService
                     using PrincipalSearcher principalSearcher = new();
                     principalSearcher.QueryFilter = new UserPrincipal(ctx);
                     using DirectorySearcher searcher = (DirectorySearcher) principalSearcher.GetUnderlyingSearcher();
-                    searcher.SearchScope =
-                        directorySearch.SearchScopeSubtree ? SearchScope.Subtree : SearchScope.OneLevel;
+                    searcher.SearchScope = directorySearch.SearchScopeSubtree ? SearchScope.Subtree : SearchScope.OneLevel;
                     searcher.PageSize = 1000;
                     searcher.PropertiesToLoad.Clear();
                     searcher.PropertiesToLoad.AddRange(new[]
                     {
-                        "SamAccountName", "distinguishedname", "SAPPersNr", "bPKBF",
-                        "sn", "GivenName", "mail", "telephonenumber", "mobile", "title", "extensionAttribute5",
-                        "extensionAttribute6", "extensionAttribute7", "extensionAttribute14"
+                        "SamAccountName", "distinguishedname", AttributeNameSapPersNr, AttributeNameBpkBf,
+                        "sn", "GivenName", "mail", "telephonenumber", "mobile", "title", AttributeNameStreetAddress,
+                        AttributeNameRoom, AttributeNameTopLevelUnits, AttributeNameJobRole
                     });
                     using SearchResultCollection resultCollection = searcher.FindAll();
                     foreach (SearchResult searchResult in resultCollection)
@@ -70,18 +77,18 @@ namespace nocscienceat.MetaDirectory.Services.AdService
             {
                 SamAccountName = GetPropertyValue(searchResult, "SamAccountName"),
                 DistinguishedName = GetPropertyValue(searchResult, "distinguishedname"),
-                SapPersNr = GetPropertyValue(searchResult, "SAPPersNr"),
-                BpkBf = GetPropertyValue(searchResult, "bPKBF"),
+                SapPersNr = GetPropertyValue(searchResult, AttributeNameSapPersNr),
+                BpkBf = GetPropertyValue(searchResult, AttributeNameBpkBf),
                 Sn = GetPropertyValue(searchResult, "sn"),
                 GivenName = GetPropertyValue(searchResult, "GivenName"),
                 Mail = GetPropertyValue(searchResult, "mail"),
                 TelephoneNumber = GetPropertyValue(searchResult, "telephonenumber"),
                 Mobile = GetPropertyValue(searchResult, "mobile"),
                 Title = GetPropertyValue(searchResult, "title"),
-                StreetAddress = GetPropertyValue(searchResult, "extensionAttribute5"),
-                Room = GetPropertyValue(searchResult, "extensionAttribute6"),
-                TopLevelUnits = GetPropertyValue(searchResult, "extensionAttribute7"),
-                JobRole = GetPropertyValue(searchResult, "extensionAttribute14")
+                StreetAddress = GetPropertyValue(searchResult, AttributeNameStreetAddress),
+                Room = GetPropertyValue(searchResult, AttributeNameRoom),
+                TopLevelUnits = GetPropertyValue(searchResult, AttributeNameTopLevelUnits),
+                JobRole = GetPropertyValue(searchResult, AttributeNameJobRole)
             };
             return adUser;
         }
@@ -101,15 +108,11 @@ namespace nocscienceat.MetaDirectory.Services.AdService
 
                     foreach (string attributeName in attributeNames)
                     {
-
-
-                        string attributeValue = string.Empty;
                         switch (attributeName)
                         {
-
                             case nameof(AdUser.BpkBf):
-                                // updateRequired = true;
-
+                                updateRequired = true;
+                                UpdateUserAttribute(directoryEntry, AttributeNameBpkBf, adUserUpdated.BpkBf);
                                 break;
                             case nameof(AdUser.Sn):
                                 _logger.LogDebug("AD user '{Dn}': sn '{Sn}' differs from Synchronization Source '{SnSource}'",
@@ -124,7 +127,8 @@ namespace nocscienceat.MetaDirectory.Services.AdService
                                     adUserCurrent.DistinguishedName, adUserCurrent.Mail ?? string.Empty, adUserUpdated.Mail ?? string.Empty);
                                 break;
                             case nameof(AdUser.TelephoneNumber):
-                                // Update logic for TelephoneNumber
+                                _logger.LogWarning("AD user '{Dn}': TelephoneNumber '{TelephoneNumber}' differs from Synchronization Source '{TelephoneNumberSource}'",
+                                    adUserCurrent.DistinguishedName, adUserCurrent.TelephoneNumber ?? string.Empty, adUserUpdated.TelephoneNumber ?? string.Empty);
                                 break;
                             case nameof(AdUser.Mobile):
                                 // Update logic for Mobile
@@ -134,22 +138,21 @@ namespace nocscienceat.MetaDirectory.Services.AdService
                                 break;
                             case nameof(AdUser.StreetAddress):
                                 updateRequired = true;
-                                UpdateUserAttribute(directoryEntry, "extensionAttribute5", adUserUpdated.StreetAddress);
+                                UpdateUserAttribute(directoryEntry, AttributeNameStreetAddress, adUserUpdated.StreetAddress);
                                 break;
                             case nameof(AdUser.Room):
                                 updateRequired = true;
-                                UpdateUserAttribute(directoryEntry, "extensionAttribute6", adUserUpdated.Room);
+                                UpdateUserAttribute(directoryEntry, AttributeNameRoom, adUserUpdated.Room);
                                 break;
                             case nameof(AdUser.TopLevelUnits):
                                 updateRequired = true;
-                                _logger.LogWarning("AD user '{Dn}': TopLevelUnits '{TopLevelUnits}' differs from Synchronization Source '{TopLevelUnitsSource}'",
-                                    adUserCurrent.DistinguishedName, adUserCurrent.TopLevelUnits ?? string.Empty, adUserUpdated.TopLevelUnits ?? string.Empty);
-                                //UpdateUserAttribute(directoryEntry, "extensionAttribute7", adUserUpdated.TopLevelUnits);
+                                UpdateUserAttribute(directoryEntry, AttributeNameTopLevelUnits, adUserUpdated.TopLevelUnits);
                                 break;
                             case nameof(AdUser.JobRole):
                                 updateRequired = true;
-                                UpdateUserAttribute(directoryEntry, "extensionAttribute14", adUserUpdated.JobRole);
+                                UpdateUserAttribute(directoryEntry, AttributeNameJobRole, adUserUpdated.JobRole);
                                 break;
+
                             default:
                                 _logger.LogWarning("Unknown attribute '{AttributeName}' for AD user '{DN}'", attributeName, adUserUpdated.DistinguishedName);
                                 break;

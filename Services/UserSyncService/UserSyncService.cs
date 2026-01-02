@@ -39,19 +39,19 @@ namespace nocscienceat.MetaDirectory.Services.UserSyncService
                 AdUser? adUser = adUsers[i];
                 string? action = adUser switch
                 {
-                    _ when string.IsNullOrWhiteSpace(adUser.SapPersNr) => "NoSapPersNr",
                     _ when !string.IsNullOrWhiteSpace(adUser.SamAccountName) && samAccountNamesToIgnore.Contains(adUser.SamAccountName!) => "IgnoreSamAccountName",
+                    _ when string.IsNullOrWhiteSpace(adUser.SapPersNr) => "NoSapPersNr",
                     _ => null
                 };
 
                 switch (action)
                 {
-                    case "NoSapPersNr":
-                        _logger.LogWarning(" AD user without SapPersNr will be ignored: {SamAccountName}, DistinguishedName: {DistinguishedName}", adUser.SamAccountName, adUser.DistinguishedName);
+                    case "IgnoreSamAccountName":
+                        _logger.LogDebug("AD user with SamAccountName in ignore list will be ignored: {SamAccountName}, DistinguishedName: {DistinguishedName}", adUser.SamAccountName, adUser.DistinguishedName);
                         adUsers.RemoveAt(i);
                         break;
-                    case "IgnoreSamAccountName":
-                        _logger.LogDebug(" AD user with SamAccountName in ignore list will be ignored: {SamAccountName}, DistinguishedName: {DistinguishedName}", adUser.SamAccountName, adUser.DistinguishedName);
+                    case "NoSapPersNr":
+                        _logger.LogWarning("AD user without SapPersNr will be ignored: {SamAccountName}, DistinguishedName: {DistinguishedName}", adUser.SamAccountName, adUser.DistinguishedName);
                         adUsers.RemoveAt(i);
                         break;
                 }
@@ -66,15 +66,15 @@ namespace nocscienceat.MetaDirectory.Services.UserSyncService
 
             foreach ( AdUser? item in userCudManager.Items2Delete)
             {
-                _logger.LogWarning(" AD user not found in IDM: {SamAccountName}, DistinguishedName: {DistinguishedName}, SapPersNr: {SapPersNr}", item.SamAccountName, item.DistinguishedName, item.SapPersNr);
-
+                _logger.LogWarning("AD user not found in IDM: {SamAccountName}, DistinguishedName: {DistinguishedName}, SapPersNr: {SapPersNr}", item.SamAccountName, item.DistinguishedName, item.SapPersNr);
             }
+
             foreach (IdmUser? item in userCudManager.Items2Create)
             {
                 if (sapPersNumbersToIgnore.Contains(item.SapPersNr)) 
-                    _logger.LogDebug(" IDM user not found in specified AD OUs: {Sn} {GivenName}, SapPersNr: {SapPersNr}", item.Sn, item.GivenName, item.SapPersNr);
+                    _logger.LogDebug("IDM user not found in specified AD OUs: {Sn} {GivenName}, SapPersNr: {SapPersNr}", item.Sn, item.GivenName, item.SapPersNr);
                 else
-                    _logger.LogWarning(" IDM user not found in specified AD OUs: {Sn} {GivenName}, SapPersNr: {SapPersNr}", item.Sn, item.GivenName, item.SapPersNr);
+                    _logger.LogWarning("IDM user not found in specified AD OUs: {Sn} {GivenName}, SapPersNr: {SapPersNr}", item.Sn, item.GivenName, item.SapPersNr);
             }
 
         }
