@@ -7,6 +7,7 @@ using nocscienceat.MetaDirectory.Services.IdmUserService;
 using nocscienceat.MetaDirectory.Services.IdmUserService.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using nocscienceat.MetaDirectory.Services.UserSyncService.Models;
 
 namespace nocscienceat.MetaDirectory.Services.UserSyncService
 {
@@ -14,24 +15,53 @@ namespace nocscienceat.MetaDirectory.Services.UserSyncService
     {
         private readonly IIdmUserService _idmUserService;
         private readonly IAdService _adService;
-        private readonly IConfiguration _configuration;
-        private readonly ILogger<Dispatcher> _logger;
+        private readonly ILogger<UserSyncService> _logger;
+        private readonly UserSyncServiceSettings _userSyncServiceSettings;
 
-        public UserSyncService(IIdmUserService idmUserService, IAdService adService, IConfiguration configuration, ILogger<Dispatcher> logger)
+        public UserSyncService(IIdmUserService idmUserService, IAdService adService, IConfiguration configuration, ILogger<UserSyncService> logger)
         {
             _idmUserService = idmUserService;
             _adService = adService;
-            _configuration = configuration;
             _logger = logger;
+            _userSyncServiceSettings = configuration.GetSection("UserSyncService").Get<UserSyncServiceSettings>() ??
+                                       throw new System.ArgumentNullException(nameof(UserSyncServiceSettings));
         }
         public async Task SyncUsersAsync()
         {
+            HashSet<string> samAccountNamesToIgnore = new(_userSyncServiceSettings.SamAccountNamesToIgnore);
+            HashSet<string> sapPersNumbersToIgnore = new(_userSyncServiceSettings.SapPersNumbersToIgnore);
+
             IEnumerable<IdmUser> idmUsers = await _idmUserService.GetUsersAsync();
-            IEnumerable<AdUser> adUsers = _adService.GetAdUsers();
-            CudManager<string, IdmUser, AdUser> userCudManager = new(new UserCudDataAdapter(), idmUsers, adUsers);
+            List<AdUser> adUsers = _adService.GetAdUsers();
+            
+            for (int i = adUsers.Count - 1; i >= 0; i--)
+            {
+                AdUser? adUser = adUsers[i];
+                string? action = adUser switch
+                {
+                    _ when string.IsNullOrWhiteSpace(adUser.SapPersNr) => "NoSapPersNr",
+                    _ when !string.IsNullOrWhiteSpace(adUser.SamAccountName) && samAccountNamesToIgnore.Contains(adUser.SamAccountName!) => "IgnoreSamAccountName",
+                    _ => null
+                };
+
+                switch (action)
+                {
+                    case "NoSapPersNr":
+                        _logger.LogWarning(" AD user without SapPersNr will be ignored: {SamAccountName}, DistinguishedName: {DistinguishedName}", adUser.SamAccountName, adUser.DistinguishedName);
+                        adUsers.RemoveAt(i);
+                        break;
+                    case "IgnoreSamAccountName":
+                        _logger.LogDebug(" AD user with SamAccountName in ignore list will be ignored: {SamAccountName}, DistinguishedName: {DistinguishedName}", adUser.SamAccountName, adUser.DistinguishedName);
+                        adUsers.RemoveAt(i);
+                        break;
+                }
+            }
+
+            CudManager<string, IdmUser, AdUser> userCudManager = new(new UserCudDataAdapter(_userSyncServiceSettings.RoomNullValue ?? ""), sourceItems: idmUsers, sync2Items: adUsers);
+            userCudManager.CheckItems();
             foreach (var itemLink in userCudManager.Items2Update)
             {
-                _adService.UpdateAdUser(itemLink.Sync2ItemUpdated, itemLink.DifferingProperties);
+                _adService.UpdateAdUser(itemLink.Sync2ItemUpdated, itemLink.Sync2Item, itemLink.DifferingProperties);
             }
 
             foreach ( AdUser? item in userCudManager.Items2Delete)
@@ -41,10 +71,11 @@ namespace nocscienceat.MetaDirectory.Services.UserSyncService
             }
             foreach (IdmUser? item in userCudManager.Items2Create)
             {
-                _logger.LogWarning(" IDM user not found in OU WF or GAW: {Sn} {GivenName}, SapPersNr: {SapPersNr}", item.Sn, item.GivenName, item.SapPersNr);
+                if (sapPersNumbersToIgnore.Contains(item.SapPersNr)) 
+                    _logger.LogDebug(" IDM user not found in specified AD OUs: {Sn} {GivenName}, SapPersNr: {SapPersNr}", item.Sn, item.GivenName, item.SapPersNr);
+                else
+                    _logger.LogWarning(" IDM user not found in specified AD OUs: {Sn} {GivenName}, SapPersNr: {SapPersNr}", item.Sn, item.GivenName, item.SapPersNr);
             }
-            var a = userCudManager.Items2Create;
-
 
         }
     }

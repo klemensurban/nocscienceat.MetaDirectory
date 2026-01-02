@@ -1,15 +1,11 @@
-﻿using System;
+﻿using nocscienceat.MetaDirectory.Services.AdService.Models;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using nocscienceat.MetaDirectory.Services.AdService.Models;
 
 namespace nocscienceat.MetaDirectory.Services.AdService
 {
     public interface IAdService
     {
-        IEnumerable<AdUser> GetAdUsers();
-        void UpdateAdUser(AdUser adUser, IEnumerable<string> attributeNames);
+        List<AdUser> GetAdUsers();
+        void UpdateAdUser(AdUser adUserUpdated, AdUser adUserCurrent, IEnumerable<string> attributeNames);
     }
 }

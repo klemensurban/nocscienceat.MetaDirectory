@@ -9,6 +9,13 @@ namespace nocscienceat.MetaDirectory.Services.UserSyncService
 {
     internal class UserCudDataAdapter: ICudDataAdapter<string, IdmUser, AdUser>
     {
+        private readonly string _roomNullValue;
+
+        public UserCudDataAdapter(string roomNullValue)
+        {
+            _roomNullValue = roomNullValue;
+        }
+
         public ComparisonResult<AdUser> Compare(IdmUser sourceItem, AdUser sync2Item)
         {
             List<string> differingProps = new();
@@ -27,11 +34,12 @@ namespace nocscienceat.MetaDirectory.Services.UserSyncService
                 sync2ItemUpdated.Sn = sourceItem.Sn;
                 differingProps.Add(nameof(sync2ItemUpdated.Sn));
             }
-
-            /*
+            
             if (!string.Equals(sourceItem.Mail, sync2Item.Mail, StringComparison.InvariantCultureIgnoreCase))
-                differingProps.Add(nameof(sourceItem.Mail));
-            */
+            {
+                sync2ItemUpdated.Mail = sourceItem.Mail;
+                differingProps.Add(nameof(sync2ItemUpdated.Mail));
+            }
 
             /*
             if (!string.Equals(sourceItem.TelephoneNumber, sync2Item.TelephoneNumber))
@@ -42,14 +50,32 @@ namespace nocscienceat.MetaDirectory.Services.UserSyncService
 
             if (!string.Equals(sourceItem.Title, sync2Item.Title))
                 differingProps.Add(nameof(sourceItem.Title));
-
-            if (!string.Equals(sourceItem.StreetAddress, sync2Item.StreetAddress))
-                differingProps.Add(nameof(sourceItem.StreetAddress));
-
-            if (!string.Equals(sourceItem.Room, sync2Item.Room))
-                differingProps.Add(nameof(sourceItem.Room));
             */
+            
+            // Check if sourceItem.Room is not null and equals "999"
+            string? room;
+            string? streetAddress;
+            if (sourceItem.Room is not null && sourceItem.Room == _roomNullValue)
+            {
+                room = null;
+                streetAddress = null;
+            }
+            else
+            {
+                room = sourceItem.Room;
+                streetAddress = sourceItem.StreetAddress;
+            }
 
+            if (!string.Equals(room, sync2Item.Room))
+            {
+                sync2ItemUpdated.Room = room;
+                differingProps.Add(nameof(sync2ItemUpdated.Room));
+            }
+            if (!string.Equals(streetAddress, sync2Item.StreetAddress))
+            {
+                sync2ItemUpdated.StreetAddress = streetAddress;
+                differingProps.Add(nameof(sync2ItemUpdated.StreetAddress));
+            }
 
             if (!string.Equals(sourceItem.TopLevelUnits, sync2Item.TopLevelUnits))
             {
@@ -57,11 +83,11 @@ namespace nocscienceat.MetaDirectory.Services.UserSyncService
                 differingProps.Add(nameof(sync2ItemUpdated.TopLevelUnits));
             }
 
-
-            /*
             if (!string.Equals(sourceItem.JobRole, sync2Item.JobRole))
-                differingProps.Add(nameof(sourceItem.JobRole));
-            */
+            {
+                sync2ItemUpdated.JobRole = sourceItem.JobRole;
+                differingProps.Add(nameof(sync2ItemUpdated.JobRole));
+            }
 
             if (!string.Equals(sourceItem.BpkBf, sync2Item.BpkBf))
             {

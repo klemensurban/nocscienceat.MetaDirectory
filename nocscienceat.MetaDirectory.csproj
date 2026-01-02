@@ -237,6 +237,7 @@
     <Compile Include="Services\IdmUserService\Models\IdmUser.cs" />
     <Compile Include="Services\IdmUserService\Models\IdmUserServiceSettings.cs" />
     <Compile Include="Services\UserSyncService\IUserSyncService.cs" />
+    <Compile Include="Services\UserSyncService\Models\UserSyncServiceSettings.cs" />
     <Compile Include="Services\UserSyncService\UserCudDataAdapter.cs" />
     <Compile Include="Services\UserSyncService\UserSyncService.cs" />
   </ItemGroup>

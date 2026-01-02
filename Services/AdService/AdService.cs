@@ -5,8 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.DirectoryServices;
 using System.DirectoryServices.AccountManagement;
-using System.Reflection;
-
 
 namespace nocscienceat.MetaDirectory.Services.AdService
 {
@@ -22,7 +20,7 @@ namespace nocscienceat.MetaDirectory.Services.AdService
             _logger = logger;
         }
 
-        public IEnumerable<AdUser> GetAdUsers()
+        public List<AdUser> GetAdUsers()
         {
             List<AdUser> adUsers = new();
             try
@@ -47,21 +45,9 @@ namespace nocscienceat.MetaDirectory.Services.AdService
                     foreach (SearchResult searchResult in resultCollection)
                     {
                         AdUser adUser = MapSearchResult2AdUser(searchResult);
-                        if (!string.IsNullOrWhiteSpace(adUser.SapPersNr))
-                        {
-                            adUsers.Add(adUser);
-                        }
-                        else
-                        {
-                            _logger.LogDebug(
-                                "AD user with SamAccountName '{SamAccountName}' has null or whitespace SapPersNr. SearchResult DN: '{DistinguishedName}'",
-                                adUser.SamAccountName, adUser.DistinguishedName);
-                        }
+                        adUsers.Add(adUser);
                     }
-
                 }
-                // Placeholder for actual AD user retrieval logic
-
                 return adUsers;
             }
             catch (Exception ex)
@@ -100,57 +86,102 @@ namespace nocscienceat.MetaDirectory.Services.AdService
             return adUser;
         }
 
-        public void UpdateAdUser(AdUser adUser, IEnumerable<string> attributeNames)
+        public void UpdateAdUser(AdUser adUserUpdated, AdUser adUserCurrent, IEnumerable<string> attributeNames)
         {
-            foreach (string attributeName in attributeNames)
+            try
             {
-                string attributeValue = string.Empty;
-                switch (attributeName)
+                using PrincipalContext context = new(ContextType.Domain);
+                using UserPrincipal? userPrincipal = UserPrincipal.FindByIdentity(context, IdentityType.SamAccountName,
+                    adUserUpdated.SamAccountName!);
+                if (userPrincipal != null)
                 {
+                    bool updateRequired = false;
 
-                    case nameof(AdUser.SapPersNr):
-                        break;
-                    case nameof(AdUser.BpkBf):
-                        break;
-                    case nameof(AdUser.Sn):
-                        attributeValue = adUser.Sn ?? string.Empty;
-                        break;
-                    case nameof(AdUser.GivenName):
-                        attributeValue = adUser.GivenName ?? string.Empty;
-                        break;
-                    case nameof(AdUser.Mail):
-                        // Update logic for Mail
-                        break;
-                    case nameof(AdUser.TelephoneNumber):
-                        // Update logic for TelephoneNumber
-                        break;
-                    case nameof(AdUser.Mobile):
-                        // Update logic for Mobile
-                        break;
-                    case nameof(AdUser.Title):
-                        // Update logic for Title
-                        break;
-                    case nameof(AdUser.StreetAddress):
-                        // Update logic for StreetAddress
-                        break;
-                    case nameof(AdUser.Room):
-                        // Update logic for Room
-                        break;
-                    case nameof(AdUser.TopLevelUnits):
-                        attributeValue = adUser.TopLevelUnits ?? string.Empty;
-                        break;
-                    case nameof(AdUser.JobRole):
-                        // Update logic for JobRole
-                        break;
-                    default:
-                        _logger.LogWarning("Unknown attribute '{AttributeName}' for AD user '{SamAccountName}'", attributeName, adUser.SamAccountName);
-                        break;
+                    using DirectoryEntry directoryEntry = (DirectoryEntry) userPrincipal.GetUnderlyingObject();
+
+                    foreach (string attributeName in attributeNames)
+                    {
+
+
+                        string attributeValue = string.Empty;
+                        switch (attributeName)
+                        {
+
+                            case nameof(AdUser.BpkBf):
+                                // updateRequired = true;
+
+                                break;
+                            case nameof(AdUser.Sn):
+                                _logger.LogDebug("AD user '{Dn}': sn '{Sn}' differs from Synchronization Source '{SnSource}'",
+                                    adUserCurrent.DistinguishedName, adUserCurrent.Sn ?? string.Empty, adUserUpdated.Sn ?? string.Empty);
+                                break;
+                            case nameof(AdUser.GivenName):
+                                _logger.LogDebug("AD user '{Dn}': GivenName'{Gn}' differs from Synchronization Source '{GnSource}'",
+                                    adUserCurrent.DistinguishedName, adUserCurrent.GivenName ?? string.Empty, adUserUpdated.GivenName ?? string.Empty);
+                                break;
+                            case nameof(AdUser.Mail):
+                                _logger.LogWarning("AD user '{Dn}': email-Address '{Mail}' differs from Synchronization Source '{MailSource}'",
+                                    adUserCurrent.DistinguishedName, adUserCurrent.Mail ?? string.Empty, adUserUpdated.Mail ?? string.Empty);
+                                break;
+                            case nameof(AdUser.TelephoneNumber):
+                                // Update logic for TelephoneNumber
+                                break;
+                            case nameof(AdUser.Mobile):
+                                // Update logic for Mobile
+                                break;
+                            case nameof(AdUser.Title):
+                                // Update logic for Title
+                                break;
+                            case nameof(AdUser.StreetAddress):
+                                updateRequired = true;
+                                UpdateUserAttribute(directoryEntry, "extensionAttribute5", adUserUpdated.StreetAddress);
+                                break;
+                            case nameof(AdUser.Room):
+                                updateRequired = true;
+                                UpdateUserAttribute(directoryEntry, "extensionAttribute6", adUserUpdated.Room);
+                                break;
+                            case nameof(AdUser.TopLevelUnits):
+                                updateRequired = true;
+                                _logger.LogWarning("AD user '{Dn}': TopLevelUnits '{TopLevelUnits}' differs from Synchronization Source '{TopLevelUnitsSource}'",
+                                    adUserCurrent.DistinguishedName, adUserCurrent.TopLevelUnits ?? string.Empty, adUserUpdated.TopLevelUnits ?? string.Empty);
+                                //UpdateUserAttribute(directoryEntry, "extensionAttribute7", adUserUpdated.TopLevelUnits);
+                                break;
+                            case nameof(AdUser.JobRole):
+                                updateRequired = true;
+                                UpdateUserAttribute(directoryEntry, "extensionAttribute14", adUserUpdated.JobRole);
+                                break;
+                            default:
+                                _logger.LogWarning("Unknown attribute '{AttributeName}' for AD user '{DN}'", attributeName, adUserUpdated.DistinguishedName);
+                                break;
+                        }
+
+                    }
+
+                    if (updateRequired)
+                    {
+                        directoryEntry.CommitChanges();
+                        _logger.LogDebug("AD User '{Dn}' updated ", adUserUpdated.DistinguishedName);
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating AD user '{SamAccountName}'", adUserUpdated.SamAccountName);
+                throw;
+            }
+        } // UpdateAdUser method
 
-                _logger.LogInformation("Updating AD user '{DN}': Attribute '{AttributeName}' with Attribute Value '{AttributeValue}'",
-                    adUser.DistinguishedName, attributeName, attributeValue);
-                // Placeholder for actual AD user update logic
+        private static void UpdateUserAttribute(DirectoryEntry directoryEntry, string attributeName, string? attributeValue)
+        {
+            if (attributeValue == null)
+            {
+                directoryEntry.Properties[attributeName].Clear();
+            }
+            else
+            {
+                directoryEntry.Properties[attributeName].Value = attributeValue;
             }
         }
-    }
+
+    } // AD Service class
 }
