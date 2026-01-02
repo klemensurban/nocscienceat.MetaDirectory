@@ -176,14 +176,10 @@ namespace nocscienceat.MetaDirectory.Services.AdService
 
         private static void UpdateUserAttribute(DirectoryEntry directoryEntry, string attributeName, string? attributeValue)
         {
-            if (attributeValue == null)
-            {
-                directoryEntry.Properties[attributeName].Clear();
-            }
-            else
-            {
+            if (attributeValue is not null)
                 directoryEntry.Properties[attributeName].Value = attributeValue;
-            }
+            else
+                directoryEntry.Properties[attributeName].Clear();
         }
 
     } // AD Service class
