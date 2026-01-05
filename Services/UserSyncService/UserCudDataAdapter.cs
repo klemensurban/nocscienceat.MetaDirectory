@@ -1,7 +1,9 @@
-﻿using nocscienceat.CudManager2;
+﻿using Microsoft.Extensions.Logging;
+using nocscienceat.CudManager2;
 using nocscienceat.CudManager2.Models;
 using nocscienceat.MetaDirectory.Services.AdService.Models;
 using nocscienceat.MetaDirectory.Services.IdmUserService.Models;
+using nocscienceat.MetaDirectory.Services.UserSyncService.Models;
 using System;
 using System.Collections.Generic;
 
@@ -9,11 +11,13 @@ namespace nocscienceat.MetaDirectory.Services.UserSyncService
 {
     internal class UserCudDataAdapter: ICudDataAdapter<string, IdmUser, AdUser>
     {
-        private readonly string _roomNullValue;
+        private readonly CudadapterOptions _options;
+        private readonly ILogger<UserSyncService> _logger;
 
-        public UserCudDataAdapter(string roomNullValue)
+        public UserCudDataAdapter(CudadapterOptions options, ILogger<UserSyncService> logger)
         {
-            _roomNullValue = roomNullValue;
+            _options = options;
+            _logger = logger;
         }
 
         public ComparisonResult<AdUser> Compare(IdmUser sourceItem, AdUser sync2Item)
@@ -25,41 +29,125 @@ namespace nocscienceat.MetaDirectory.Services.UserSyncService
 
             if (!string.Equals(sourceItem.GivenName, sync2Item.GivenName))
             {
-                sync2ItemUpdated.GivenName = sourceItem.GivenName;
-                differingProps.Add(nameof(sync2ItemUpdated.GivenName));
+                switch (_options.GivenName)
+                {
+                    case SyncOption.Sync:
+                        sync2ItemUpdated.GivenName = sourceItem.GivenName;
+                        differingProps.Add(nameof(sync2ItemUpdated.GivenName));
+                        break;
+                    case SyncOption.Ignore:
+                        break;
+                    case SyncOption.Debug:
+                        _logger.LogDebug("AD User {Dn}: GivenName differs: Source Value {Source} vs {Sync2}", sync2Item.DistinguishedName, sourceItem.GivenName, sync2Item.GivenName );
+                        break;
+                    case SyncOption.Warn:
+                        _logger.LogWarning("AD User {Dn} :GivenName differs: Source Value {Source} vs {Sync2}", sync2Item.DistinguishedName, sourceItem.GivenName, sync2Item.GivenName);
+                        break;
+                }
             }
 
             if (!string.Equals(sourceItem.Sn, sync2Item.Sn))
             {
-                sync2ItemUpdated.Sn = sourceItem.Sn;
-                differingProps.Add(nameof(sync2ItemUpdated.Sn));
+                switch (_options.Sn)
+                {
+                    case SyncOption.Sync:
+                        sync2ItemUpdated.Sn = sourceItem.Sn;
+                        differingProps.Add(nameof(sync2ItemUpdated.Sn));
+                        break;
+                    case SyncOption.Ignore:
+                        break;
+                    case SyncOption.Debug:
+                        _logger.LogDebug("AD User {Dn}: Sn differs: Source Value {Source} vs {Sync2}", sync2Item.DistinguishedName, sourceItem.Sn, sync2Item.Sn);
+                        break;
+                    case SyncOption.Warn:
+                        _logger.LogWarning("AD User {Dn}: Sn differs: Source Value {Source} vs {Sync2}", sync2Item.DistinguishedName, sourceItem.Sn, sync2Item.Sn);
+                        break;
+                }
             }
             
             if (!string.Equals(sourceItem.Mail, sync2Item.Mail, StringComparison.InvariantCultureIgnoreCase))
             {
-                sync2ItemUpdated.Mail = sourceItem.Mail;
-                differingProps.Add(nameof(sync2ItemUpdated.Mail));
+                switch (_options.Mail)
+                {
+                    case SyncOption.Sync:
+                        sync2ItemUpdated.Mail = sourceItem.Mail;
+                        differingProps.Add(nameof(sync2ItemUpdated.Mail));
+                        break;
+                    case SyncOption.Ignore:
+                        break;
+                    case SyncOption.Debug:
+                        _logger.LogDebug("AD User {Dn}: Mail differs: Source Value {Source} vs {Sync2}", sync2Item.DistinguishedName, sourceItem.Mail, sync2Item.Mail);
+                        break;
+                    case SyncOption.Warn:
+                        _logger.LogWarning("AD User {Dn}: Mail differs: Source Value {Source} vs {Sync2}", sync2Item.DistinguishedName, sourceItem.Mail, sync2Item.Mail);
+                        break;
+                }
             }
-
 
             if (!string.Equals(sourceItem.TelephoneNumber, sync2Item.TelephoneNumber))
             {
-                sync2ItemUpdated.TelephoneNumber = sourceItem.TelephoneNumber;
-                differingProps.Add(nameof(sync2ItemUpdated.TelephoneNumber));
+                switch (_options.TelephoneNumber)
+                {
+                    case SyncOption.Sync:
+                        sync2ItemUpdated.TelephoneNumber = sourceItem.TelephoneNumber;
+                        differingProps.Add(nameof(sync2ItemUpdated.TelephoneNumber));
+                        break;
+                    case SyncOption.Ignore:
+                        break;
+                    case SyncOption.Debug:
+                        _logger.LogDebug("AD User {Dn}: TelephoneNumber differs: Source Value {Source} vs {Sync2}", sync2Item.DistinguishedName, sourceItem.TelephoneNumber, sync2Item.TelephoneNumber);
+                        break;
+                    case SyncOption.Warn:
+                        _logger.LogWarning("AD User {Dn}: TelephoneNumber differs: Source Value {Source} vs {Sync2}", sync2Item.DistinguishedName, sourceItem.TelephoneNumber, sync2Item.TelephoneNumber);
+                        break;
+                }
             }
 
-            /*
+
             if (!string.Equals(sourceItem.Mobile, sync2Item.Mobile))
-                differingProps.Add(nameof(sourceItem.Mobile));
+            {
+                switch (_options.Mobile)
+                {
+                    case SyncOption.Sync:
+                        sync2ItemUpdated.Mobile = sourceItem.Mobile;
+                        differingProps.Add(nameof(sync2ItemUpdated.Mobile));
+                        break;
+                    case SyncOption.Ignore:
+                        break;
+                    case SyncOption.Debug:
+                        _logger.LogDebug("AD User {Dn}: Mobile differs: Source Value {Source} vs {Sync2}", sync2Item.DistinguishedName, sourceItem.Mobile, sync2Item.Mobile);
+                        break;
+                    case SyncOption.Warn:
+                        _logger.LogWarning("AD User {Dn}: Mobile differs: Source Value {Source} vs {Sync2}", sync2Item.DistinguishedName, sourceItem.Mobile, sync2Item.Mobile);
+                        break;
+                }
+            }
 
             if (!string.Equals(sourceItem.Title, sync2Item.Title))
-                differingProps.Add(nameof(sourceItem.Title));
-            */
+            {
+                switch (_options.Title)
+                {
+                    case SyncOption.Sync:
+                        sync2ItemUpdated.Title = sourceItem.Title;
+                        differingProps.Add(nameof(sync2ItemUpdated.Title));
+                        break;
+                    case SyncOption.Ignore:
+                        break;
+                    case SyncOption.Debug:
+                        _logger.LogDebug("AD User {Dn}: Title differs: Source Value {Source} vs {Sync2}", sync2Item.DistinguishedName, sourceItem.Title, sync2Item.Title);
+                        break;
+                    case SyncOption.Warn:
+                        _logger.LogWarning("AD User {Dn}: Title differs: Source Value {Source} vs {Sync2}", sync2Item.DistinguishedName, sourceItem.Title, sync2Item.Title);
+                        break;
+                }
+            }
+           
 
             // Check if sourceItem.Room is not null and equals "999"
             string? room;
             string? streetAddress;
-            if (sourceItem.Room is not null && sourceItem.Room == _roomNullValue)
+
+            if (sourceItem.Room is not null && sourceItem.Room == (_options.RoomNullValue ?? string.Empty))
             {
                 room = null;
                 streetAddress = null;
@@ -80,6 +168,8 @@ namespace nocscienceat.MetaDirectory.Services.UserSyncService
                 sync2ItemUpdated.StreetAddress = streetAddress;
                 differingProps.Add(nameof(sync2ItemUpdated.StreetAddress));
             }
+
+
 
             if (!string.Equals(sourceItem.TopLevelUnits, sync2Item.TopLevelUnits))
             {

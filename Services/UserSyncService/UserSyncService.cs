@@ -57,7 +57,7 @@ namespace nocscienceat.MetaDirectory.Services.UserSyncService
                 }
             }
 
-            CudManager<string, IdmUser, AdUser> userCudManager = new(new UserCudDataAdapter(_userSyncServiceSettings.RoomNullValue ?? ""), sourceItems: idmUsers, sync2Items: adUsers);
+            CudManager<string, IdmUser, AdUser> userCudManager = new(new UserCudDataAdapter(_userSyncServiceSettings.Cudadapter, _logger), sourceItems: idmUsers, sync2Items: adUsers);
             userCudManager.CheckItems();
             foreach (var itemLink in userCudManager.Items2Update)
             {

@@ -19,7 +19,14 @@ namespace nocscienceat.MetaDirectory.Services.AdService
         private const string AttributeNameJobRole = "extensionAttribute14";
         private const string AttributeNameBpkBf = "bPKBF";
         private const string AttributeNameSapPersNr = "SAPPersNr";
-
+        private const string AttributeNameTelephoneNumber = "telephonenumber";
+        private const string AttributeNameSamAccountName = "SamAccountName";
+        private const string AttributeNameDistinguishedName = "distinguishedname";
+        private const string AttributeNameSn = "sn";
+        private const string AttributeNameGivenName = "GivenName";
+        private const string AttributeNameMobile = "mobile";
+        private const string AttributeNameTitle = "title";
+        private const string AttributeNameMail = "mail";
 
         public AdService(IConfiguration configuration, ILogger<AdService> logger)
         {
@@ -44,9 +51,9 @@ namespace nocscienceat.MetaDirectory.Services.AdService
                     searcher.PropertiesToLoad.Clear();
                     searcher.PropertiesToLoad.AddRange(new[]
                     {
-                        "SamAccountName", "distinguishedname", AttributeNameSapPersNr, AttributeNameBpkBf,
-                        "sn", "GivenName", "mail", "telephonenumber", "mobile", "title", AttributeNameStreetAddress,
-                        AttributeNameRoom, AttributeNameTopLevelUnits, AttributeNameJobRole
+                        AttributeNameSamAccountName, AttributeNameDistinguishedName, AttributeNameSapPersNr, AttributeNameBpkBf,
+                        AttributeNameSn, AttributeNameGivenName, AttributeNameMail, AttributeNameTelephoneNumber, AttributeNameMobile, 
+                        AttributeNameTitle, AttributeNameStreetAddress, AttributeNameRoom, AttributeNameTopLevelUnits, AttributeNameJobRole
                     });
                     using SearchResultCollection resultCollection = searcher.FindAll();
                     foreach (SearchResult searchResult in resultCollection)
@@ -75,16 +82,16 @@ namespace nocscienceat.MetaDirectory.Services.AdService
         {
             AdUser adUser = new()
             {
-                SamAccountName = GetPropertyValue(searchResult, "SamAccountName"),
-                DistinguishedName = GetPropertyValue(searchResult, "distinguishedname"),
+                SamAccountName = GetPropertyValue(searchResult, AttributeNameSamAccountName),
+                DistinguishedName = GetPropertyValue(searchResult, AttributeNameDistinguishedName),
                 SapPersNr = GetPropertyValue(searchResult, AttributeNameSapPersNr),
                 BpkBf = GetPropertyValue(searchResult, AttributeNameBpkBf),
-                Sn = GetPropertyValue(searchResult, "sn"),
-                GivenName = GetPropertyValue(searchResult, "GivenName"),
-                Mail = GetPropertyValue(searchResult, "mail"),
-                TelephoneNumber = GetPropertyValue(searchResult, "telephonenumber"),
-                Mobile = GetPropertyValue(searchResult, "mobile"),
-                Title = GetPropertyValue(searchResult, "title"),
+                Sn = GetPropertyValue(searchResult, AttributeNameSn),
+                GivenName = GetPropertyValue(searchResult, AttributeNameGivenName),
+                Mail = GetPropertyValue(searchResult, AttributeNameMail),
+                TelephoneNumber = GetPropertyValue(searchResult, AttributeNameTelephoneNumber),
+                Mobile = GetPropertyValue(searchResult, AttributeNameMobile),
+                Title = GetPropertyValue(searchResult, AttributeNameTitle),
                 StreetAddress = GetPropertyValue(searchResult, AttributeNameStreetAddress),
                 Room = GetPropertyValue(searchResult, AttributeNameRoom),
                 TopLevelUnits = GetPropertyValue(searchResult, AttributeNameTopLevelUnits),
@@ -115,26 +122,25 @@ namespace nocscienceat.MetaDirectory.Services.AdService
                                 UpdateUserAttribute(directoryEntry, AttributeNameBpkBf, adUserUpdated.BpkBf);
                                 break;
                             case nameof(AdUser.Sn):
-                                _logger.LogDebug("AD user '{Dn}': sn '{Sn}' differs from Synchronization Source '{SnSource}'",
-                                    adUserCurrent.DistinguishedName, adUserCurrent.Sn ?? string.Empty, adUserUpdated.Sn ?? string.Empty);
+                                updateRequired = true;
+                                UpdateUserAttribute(directoryEntry, AttributeNameSn, adUserUpdated.Sn);
                                 break;
                             case nameof(AdUser.GivenName):
-                                _logger.LogDebug("AD user '{Dn}': GivenName'{Gn}' differs from Synchronization Source '{GnSource}'",
-                                    adUserCurrent.DistinguishedName, adUserCurrent.GivenName ?? string.Empty, adUserUpdated.GivenName ?? string.Empty);
+                                UpdateUserAttribute(directoryEntry, AttributeNameGivenName, adUserUpdated.GivenName);
+                                updateRequired = true;
                                 break;
                             case nameof(AdUser.Mail):
-                                _logger.LogWarning("AD user '{Dn}': email-Address '{Mail}' differs from Synchronization Source '{MailSource}'",
-                                    adUserCurrent.DistinguishedName, adUserCurrent.Mail ?? string.Empty, adUserUpdated.Mail ?? string.Empty);
+                                _logger.LogWarning("AD user '{Dn}': AD Attribute Mail can not be synced in an Exchange Environment", adUserCurrent.DistinguishedName);
                                 break;
                             case nameof(AdUser.TelephoneNumber):
-                                _logger.LogWarning("AD user '{Dn}': TelephoneNumber '{TelephoneNumber}' differs from Synchronization Source '{TelephoneNumberSource}'",
-                                    adUserCurrent.DistinguishedName, adUserCurrent.TelephoneNumber ?? string.Empty, adUserUpdated.TelephoneNumber ?? string.Empty);
+                                UpdateUserAttribute(directoryEntry, AttributeNameTelephoneNumber, adUserUpdated.TelephoneNumber);
+                                updateRequired = true;
                                 break;
                             case nameof(AdUser.Mobile):
-                                // Update logic for Mobile
+                                UpdateUserAttribute(directoryEntry, AttributeNameMobile, adUserUpdated.Mobile);
                                 break;
                             case nameof(AdUser.Title):
-                                // Update logic for Title
+                                UpdateUserAttribute(directoryEntry, AttributeNameTitle, adUserUpdated.Title);
                                 break;
                             case nameof(AdUser.StreetAddress):
                                 updateRequired = true;
