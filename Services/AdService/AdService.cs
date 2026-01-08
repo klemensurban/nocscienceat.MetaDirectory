@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.DirectoryServices;
 using System.DirectoryServices.AccountManagement;
+using System.Text;
 
 namespace nocscienceat.MetaDirectory.Services.AdService
 {
@@ -27,6 +28,8 @@ namespace nocscienceat.MetaDirectory.Services.AdService
         private const string AttributeNameMobile = "mobile";
         private const string AttributeNameTitle = "title";
         private const string AttributeNameMail = "mail";
+        private const string AttributeNameComputerStatus = "extensionAttribute10";
+        private const string AttributeNameComputerName = "name";
 
         public AdService(IConfiguration configuration, ILogger<AdService> logger)
         {
@@ -100,16 +103,16 @@ namespace nocscienceat.MetaDirectory.Services.AdService
             return adUser;
         }
 
-        public void UpdateAdUser(AdUser adUserUpdated, AdUser adUserCurrent, IEnumerable<string> attributeNames)
+        public void UpdateAdUser(AdUser adUserUpdated, IEnumerable<string> attributeNames)
         {
             try
             {
                 using PrincipalContext context = new(ContextType.Domain);
-                using UserPrincipal? userPrincipal = UserPrincipal.FindByIdentity(context, IdentityType.SamAccountName,
-                    adUserUpdated.SamAccountName!);
+                using UserPrincipal? userPrincipal = UserPrincipal.FindByIdentity(context, IdentityType.SamAccountName, adUserUpdated.SamAccountName!);
                 if (userPrincipal != null)
                 {
                     bool updateRequired = false;
+                    StringBuilder attributes = new();
 
                     using DirectoryEntry directoryEntry = (DirectoryEntry) userPrincipal.GetUnderlyingObject();
 
@@ -119,57 +122,58 @@ namespace nocscienceat.MetaDirectory.Services.AdService
                         {
                             case nameof(AdUser.BpkBf):
                                 updateRequired = true;
-                                UpdateUserAttribute(directoryEntry, AttributeNameBpkBf, adUserUpdated.BpkBf);
+                                UpdateAttribute(directoryEntry, AttributeNameBpkBf, adUserUpdated.BpkBf);
                                 break;
                             case nameof(AdUser.Sn):
                                 updateRequired = true;
-                                UpdateUserAttribute(directoryEntry, AttributeNameSn, adUserUpdated.Sn);
+                                UpdateAttribute(directoryEntry, AttributeNameSn, adUserUpdated.Sn);
                                 break;
                             case nameof(AdUser.GivenName):
-                                UpdateUserAttribute(directoryEntry, AttributeNameGivenName, adUserUpdated.GivenName);
+                                UpdateAttribute(directoryEntry, AttributeNameGivenName, adUserUpdated.GivenName);
                                 updateRequired = true;
                                 break;
                             case nameof(AdUser.Mail):
-                                _logger.LogWarning("AD user '{Dn}': AD Attribute Mail can not be synced in an Exchange Environment", adUserCurrent.DistinguishedName);
+                                _logger.LogWarning("AD user '{Dn}': AD Attribute Mail can not be synced in an Exchange Environment", adUserUpdated.DistinguishedName);
                                 break;
                             case nameof(AdUser.TelephoneNumber):
-                                UpdateUserAttribute(directoryEntry, AttributeNameTelephoneNumber, adUserUpdated.TelephoneNumber);
+                                UpdateAttribute(directoryEntry, AttributeNameTelephoneNumber, adUserUpdated.TelephoneNumber);
                                 updateRequired = true;
                                 break;
                             case nameof(AdUser.Mobile):
-                                UpdateUserAttribute(directoryEntry, AttributeNameMobile, adUserUpdated.Mobile);
+                                UpdateAttribute(directoryEntry, AttributeNameMobile, adUserUpdated.Mobile);
                                 break;
                             case nameof(AdUser.Title):
-                                UpdateUserAttribute(directoryEntry, AttributeNameTitle, adUserUpdated.Title);
+                                UpdateAttribute(directoryEntry, AttributeNameTitle, adUserUpdated.Title);
                                 break;
                             case nameof(AdUser.StreetAddress):
                                 updateRequired = true;
-                                UpdateUserAttribute(directoryEntry, AttributeNameStreetAddress, adUserUpdated.StreetAddress);
+                                UpdateAttribute(directoryEntry, AttributeNameStreetAddress, adUserUpdated.StreetAddress);
                                 break;
                             case nameof(AdUser.Room):
                                 updateRequired = true;
-                                UpdateUserAttribute(directoryEntry, AttributeNameRoom, adUserUpdated.Room);
+                                UpdateAttribute(directoryEntry, AttributeNameRoom, adUserUpdated.Room);
                                 break;
                             case nameof(AdUser.TopLevelUnits):
                                 updateRequired = true;
-                                UpdateUserAttribute(directoryEntry, AttributeNameTopLevelUnits, adUserUpdated.TopLevelUnits);
+                                UpdateAttribute(directoryEntry, AttributeNameTopLevelUnits, adUserUpdated.TopLevelUnits);
                                 break;
                             case nameof(AdUser.JobRole):
                                 updateRequired = true;
-                                UpdateUserAttribute(directoryEntry, AttributeNameJobRole, adUserUpdated.JobRole);
+                                UpdateAttribute(directoryEntry, AttributeNameJobRole, adUserUpdated.JobRole);
                                 break;
 
                             default:
                                 _logger.LogWarning("Unknown attribute '{AttributeName}' for AD user '{DN}'", attributeName, adUserUpdated.DistinguishedName);
                                 break;
                         }
+                        attributes.Append(attributeName).Append(" ");
 
                     }
 
                     if (updateRequired)
                     {
                         directoryEntry.CommitChanges();
-                        _logger.LogDebug("AD User '{Dn}' updated ", adUserUpdated.DistinguishedName);
+                        _logger.LogDebug("AD User '{Dn}' updated, Attributes: {Attributes} ", adUserUpdated.DistinguishedName, attributes.ToString().Trim());
                     }
                 }
             }
@@ -178,9 +182,102 @@ namespace nocscienceat.MetaDirectory.Services.AdService
                 _logger.LogError(ex, "Error updating AD user '{SamAccountName}'", adUserUpdated.SamAccountName);
                 throw;
             }
-        } // UpdateAdUser method
+        }
 
-        private static void UpdateUserAttribute(DirectoryEntry directoryEntry, string attributeName, string? attributeValue)
+        public List<AdComputer> GetAdComputers()
+        {
+            List<AdComputer> adComputers = new();
+            try
+            {
+                foreach (DirectorySearch directorySearch in _adServiceSettings.ComputerOUs)
+                {
+                    using PrincipalContext ctx = new(ContextType.Domain, null, directorySearch.Dn);
+                    using PrincipalSearcher principalSearcher = new();
+                    principalSearcher.QueryFilter = new ComputerPrincipal(ctx);
+                    using DirectorySearcher searcher = (DirectorySearcher)principalSearcher.GetUnderlyingSearcher();
+                    searcher.SearchScope = directorySearch.SearchScopeSubtree ? SearchScope.Subtree : SearchScope.OneLevel;
+                    searcher.PageSize = 1000;
+                    searcher.PropertiesToLoad.Clear();
+                    searcher.PropertiesToLoad.AddRange(new[]
+                    {
+                        AttributeNameSamAccountName, AttributeNameDistinguishedName, AttributeNameComputerName,
+                        AttributeNameComputerStatus
+                    });
+                    using SearchResultCollection resultCollection = searcher.FindAll();
+                    foreach (SearchResult searchResult in resultCollection)
+                    {
+                        AdComputer adComputer = MapSearchResult2AdComputer(searchResult);
+                        adComputers.Add(adComputer);
+                    }
+                }
+                return adComputers;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching AD Computers");
+                throw;
+            }
+        }
+
+        public void UpdateAdComputer(AdComputer adComputerUpdated, IEnumerable<string> attributeNames)
+        {
+            try
+            {
+                using PrincipalContext context = new(ContextType.Domain);
+                using ComputerPrincipal? computerPrincipal = ComputerPrincipal.FindByIdentity(context, IdentityType.SamAccountName, adComputerUpdated.SamAccountName!);
+                if (computerPrincipal != null)
+                {
+                    bool updateRequired = false;
+                    StringBuilder attributes = new();
+
+                    using DirectoryEntry directoryEntry = (DirectoryEntry)computerPrincipal.GetUnderlyingObject();
+
+                    foreach (string attributeName in attributeNames)
+                    {
+                        switch (attributeName)
+                        {
+                            case nameof(AdComputer.Status):
+                                updateRequired = true;
+                                UpdateAttribute(directoryEntry, AttributeNameComputerStatus, adComputerUpdated.Status);
+                                break;
+
+
+                            default:
+                                _logger.LogWarning("Unknown attribute '{AttributeName}' for AD user '{DN}'", attributeName, adComputerUpdated.DistinguishedName);
+                                break;
+                        }
+                        attributes.Append(attributeName).Append(" ");
+
+                    }
+
+                    if (updateRequired)
+                    {
+                        directoryEntry.CommitChanges();
+                        _logger.LogDebug("AD Computer '{Dn}' updated, Attributes: {Attributes} ", adComputerUpdated.DistinguishedName, attributes.ToString().Trim());
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating AD Computer '{SamAccountName}'", adComputerUpdated.SamAccountName);
+                throw;
+            }
+        }
+
+        private AdComputer MapSearchResult2AdComputer(SearchResult searchResult)
+        {
+            AdComputer adComputer = new()
+            {
+                SamAccountName = GetPropertyValue(searchResult, AttributeNameSamAccountName),
+                DistinguishedName = GetPropertyValue(searchResult, AttributeNameDistinguishedName),
+                Name = GetPropertyValue(searchResult,  AttributeNameComputerName)!,
+                Status = GetPropertyValue(searchResult, AttributeNameComputerStatus)
+            };
+            return adComputer;
+        }
+
+
+        private static void UpdateAttribute(DirectoryEntry directoryEntry, string attributeName, string? attributeValue)
         {
             if (attributeValue is not null)
                 directoryEntry.Properties[attributeName].Value = attributeValue;

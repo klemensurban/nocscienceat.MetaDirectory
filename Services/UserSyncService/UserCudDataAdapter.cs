@@ -11,10 +11,10 @@ namespace nocscienceat.MetaDirectory.Services.UserSyncService
 {
     internal class UserCudDataAdapter: ICudDataAdapter<string, IdmUser, AdUser>
     {
-        private readonly CudadapterOptions _options;
+        private readonly UserCudadapterOptions _options;
         private readonly ILogger<UserSyncService> _logger;
 
-        public UserCudDataAdapter(CudadapterOptions options, ILogger<UserSyncService> logger)
+        public UserCudDataAdapter(UserCudadapterOptions options, ILogger<UserSyncService> logger)
         {
             _options = options;
             _logger = logger;

@@ -8,6 +8,8 @@ using nocscienceat.MetaDirectory.Services.UserSyncService;
 using Serilog;
 using System;
 using System.Threading;
+using nocscienceat.MetaDirectory.Services.ComputerSyncService;
+using nocscienceat.MetaDirectory.Services.IdmDeviceService;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
@@ -32,6 +34,8 @@ try
             services.AddSingleton<IUserSyncService, UserSyncService>();
             services.AddSingleton<IIdmUserService, IdmUserService>();
             services.AddSingleton<IAdService, AdService>();
+            services.AddSingleton<IComputerSyncService, ComputerSyncService>();
+            services.AddSingleton<IIdmDeviceService, IdmDeviceService>();
 
             services.AddSingleton<Dispatcher>();
         })

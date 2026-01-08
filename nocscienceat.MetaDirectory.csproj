@@ -225,6 +225,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Dispatcher.cs" />
+    <Compile Include="Services\AdService\Models\AdComputer.cs" />
+    <Compile Include="Services\ComputerSyncService\ComputerCudDataAdapter.cs" />
+    <Compile Include="Services\ComputerSyncService\Models\ComputerStatus.cs" />
+    <Compile Include="Services\ComputerSyncService\ComputerSyncService.cs" />
+    <Compile Include="Services\ComputerSyncService\IComputerSyncService.cs" />
     <Compile Include="IsExternalInit\IsExternalInit.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -232,6 +237,10 @@
     <Compile Include="Services\AdService\IAdService.cs" />
     <Compile Include="Services\AdService\Models\AdServiceSettings.cs" />
     <Compile Include="Services\AdService\Models\AdUser.cs" />
+    <Compile Include="Services\IdmDeviceService\IdmDeviceService.cs" />
+    <Compile Include="Services\IdmDeviceService\IIdmDeviceService.cs" />
+    <Compile Include="Services\IdmDeviceService\Models\IdmComputer.cs" />
+    <Compile Include="Services\IdmDeviceService\Models\IdmDeviceServiceSettings.cs" />
     <Compile Include="Services\IdmUserService\IdmUserService.cs" />
     <Compile Include="Services\IdmUserService\IIdmUserService.cs" />
     <Compile Include="Services\IdmUserService\Models\IdmUser.cs" />

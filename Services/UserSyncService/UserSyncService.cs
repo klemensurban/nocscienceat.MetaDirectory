@@ -5,9 +5,9 @@ using nocscienceat.MetaDirectory.Services.AdService;
 using nocscienceat.MetaDirectory.Services.AdService.Models;
 using nocscienceat.MetaDirectory.Services.IdmUserService;
 using nocscienceat.MetaDirectory.Services.IdmUserService.Models;
+using nocscienceat.MetaDirectory.Services.UserSyncService.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using nocscienceat.MetaDirectory.Services.UserSyncService.Models;
 
 namespace nocscienceat.MetaDirectory.Services.UserSyncService
 {
@@ -30,10 +30,13 @@ namespace nocscienceat.MetaDirectory.Services.UserSyncService
         {
             HashSet<string> samAccountNamesToIgnore = new(_userSyncServiceSettings.SamAccountNamesToIgnore);
             HashSet<string> sapPersNumbersToIgnore = new(_userSyncServiceSettings.SapPersNumbersToIgnore);
+            HashSet<string> seenSapPersNr = new();
 
             IEnumerable<IdmUser> idmUsers = await _idmUserService.GetUsersAsync();
             List<AdUser> adUsers = _adService.GetAdUsers();
-            
+
+            bool hasDuplicateSapPersNr = false;
+
             for (int i = adUsers.Count - 1; i >= 0; i--)
             {
                 AdUser? adUser = adUsers[i];
@@ -41,6 +44,8 @@ namespace nocscienceat.MetaDirectory.Services.UserSyncService
                 {
                     _ when !string.IsNullOrWhiteSpace(adUser.SamAccountName) && samAccountNamesToIgnore.Contains(adUser.SamAccountName!) => "IgnoreSamAccountName",
                     _ when string.IsNullOrWhiteSpace(adUser.SapPersNr) => "NoSapPersNr",
+                    _ when !string.IsNullOrWhiteSpace(adUser.SapPersNr) && adUser.SapPersNr!.Trim().ToUpperInvariant() == "NOSAP" => "NoSapPersNr",
+                    _ when !string.IsNullOrWhiteSpace(adUser.SapPersNr) && !seenSapPersNr.Add(adUser.SapPersNr!) => "DuplicateSapPersNr",
                     _ => null
                 };
 
@@ -54,14 +59,24 @@ namespace nocscienceat.MetaDirectory.Services.UserSyncService
                         _logger.LogWarning("AD user without SapPersNr will be ignored: {SamAccountName}, DistinguishedName: {DistinguishedName}", adUser.SamAccountName, adUser.DistinguishedName);
                         adUsers.RemoveAt(i);
                         break;
+                    case "DuplicateSapPersNr":
+                        hasDuplicateSapPersNr = true;
+                        _logger.LogError("Duplicate SapPersNr found in AD users: {SapPersNr}, SamAccountName: {SamAccountName}, DistinguishedName: {DistinguishedName}", adUser.SapPersNr, adUser.SamAccountName, adUser.DistinguishedName);
+                        break;
                 }
             }
 
-            CudManager<string, IdmUser, AdUser> userCudManager = new(new UserCudDataAdapter(_userSyncServiceSettings.Cudadapter, _logger), sourceItems: idmUsers, sync2Items: adUsers);
+            if (hasDuplicateSapPersNr)
+            {
+                _logger.LogError("User synchronization aborted due to duplicate SapPersNr entries in AD users.");
+                return;
+            }
+
+            CudManager<string, IdmUser, AdUser> userCudManager = new(new UserCudDataAdapter(_userSyncServiceSettings.UserCudadapter, _logger), sourceItems: idmUsers, sync2Items: adUsers);
             userCudManager.CheckItems();
             foreach (var itemLink in userCudManager.Items2Update)
             {
-                _adService.UpdateAdUser(itemLink.Sync2ItemUpdated, itemLink.Sync2Item, itemLink.DifferingProperties);
+                _adService.UpdateAdUser(itemLink.Sync2ItemUpdated, itemLink.DifferingProperties);
             }
 
             foreach ( AdUser? item in userCudManager.Items2Delete)

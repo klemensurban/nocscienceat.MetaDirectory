@@ -7,10 +7,10 @@ namespace nocscienceat.MetaDirectory.Services.UserSyncService.Models
         public string? RoomNullValue { get; set; }
         public List<string> SamAccountNamesToIgnore { get; set; } = new();
         public List<string> SapPersNumbersToIgnore { get; set; } = new();
-        public CudadapterOptions Cudadapter { get; set; } = new();
+        public UserCudadapterOptions UserCudadapter { get; set; } = new();
     }
 
-    public class CudadapterOptions
+    public class UserCudadapterOptions
     {
         public string? RoomNullValue { get; set; }
         public SyncOption TelephoneNumber { get; set; } = SyncOption.Ignore;

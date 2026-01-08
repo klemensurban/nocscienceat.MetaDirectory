@@ -6,6 +6,8 @@ namespace nocscienceat.MetaDirectory.Services.AdService
     public interface IAdService
     {
         List<AdUser> GetAdUsers();
-        void UpdateAdUser(AdUser adUserUpdated, AdUser adUserCurrent, IEnumerable<string> attributeNames);
+        List<AdComputer> GetAdComputers();
+        void UpdateAdUser(AdUser adUserUpdated, IEnumerable<string> attributeNames);
+        void UpdateAdComputer(AdComputer adComputerUpdated, IEnumerable<string> attributeNames);
     }
 }
