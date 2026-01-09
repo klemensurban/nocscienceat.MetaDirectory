@@ -45,7 +45,7 @@
         public string? Mobile
         {
             get => _mobile;
-            set => _mobile = NormalizeString(value);
+            set => _mobile = !string.IsNullOrWhiteSpace(value) ? value!.Replace(" ", "").Trim() : null;
         }
 
         public string? Room                                 // extensionAttribute6
@@ -65,7 +65,7 @@
             get => _streetAddress;
             set => _streetAddress = NormalizeString(value);
         } 
-
+            
         public string? TelephoneNumber
         {
             get => _telephoneNumber;

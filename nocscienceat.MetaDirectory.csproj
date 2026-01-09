@@ -53,8 +53,14 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="BouncyCastle.Cryptography, Version=2.0.0.0, Culture=neutral, PublicKeyToken=072edcf4a5328938, processorArchitecture=MSIL">
+      <HintPath>packages\BouncyCastle.Cryptography.2.6.1\lib\net461\BouncyCastle.Cryptography.dll</HintPath>
+    </Reference>
     <Reference Include="Dapper, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\Dapper.2.1.66\lib\net461\Dapper.dll</HintPath>
+    </Reference>
+    <Reference Include="MailKit, Version=4.14.0.0, Culture=neutral, PublicKeyToken=4e064fe7c44a8f1b, processorArchitecture=MSIL">
+      <HintPath>packages\MailKit.4.14.1\lib\net48\MailKit.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=10.0.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>packages\Microsoft.Bcl.AsyncInterfaces.10.0.1\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
@@ -92,8 +98,8 @@
     <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions, Version=10.0.0.1, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
       <HintPath>packages\Microsoft.Extensions.DependencyInjection.Abstractions.10.0.1\lib\net462\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Extensions.DependencyModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
-      <HintPath>packages\Microsoft.Extensions.DependencyModel.10.0.0\lib\net462\Microsoft.Extensions.DependencyModel.dll</HintPath>
+    <Reference Include="Microsoft.Extensions.DependencyModel, Version=10.0.0.1, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>packages\Microsoft.Extensions.DependencyModel.10.0.1\lib\net462\Microsoft.Extensions.DependencyModel.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Extensions.Diagnostics, Version=10.0.0.1, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
       <HintPath>packages\Microsoft.Extensions.Diagnostics.10.0.1\lib\net462\Microsoft.Extensions.Diagnostics.dll</HintPath>
@@ -146,8 +152,11 @@
     <Reference Include="Microsoft.Extensions.Primitives, Version=10.0.0.1, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
       <HintPath>packages\Microsoft.Extensions.Primitives.10.0.1\lib\net462\Microsoft.Extensions.Primitives.dll</HintPath>
     </Reference>
-    <Reference Include="nocscienceat.CudManager2, Version=3.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\nocscienceat.CudManager2.3.0.0\lib\netstandard2.0\nocscienceat.CudManager2.dll</HintPath>
+    <Reference Include="MimeKit, Version=4.14.0.0, Culture=neutral, PublicKeyToken=bede1c8a46c66814, processorArchitecture=MSIL">
+      <HintPath>packages\MimeKit.4.14.0\lib\net48\MimeKit.dll</HintPath>
+    </Reference>
+    <Reference Include="nocscienceat.CudManager2, Version=3.0.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\nocscienceat.CudManager2.3.0.1\lib\netstandard2.0\nocscienceat.CudManager2.dll</HintPath>
     </Reference>
     <Reference Include="Serilog, Version=4.3.0.0, Culture=neutral, PublicKeyToken=24c2f752a8e58a10, processorArchitecture=MSIL">
       <HintPath>packages\Serilog.4.3.0\lib\net471\Serilog.dll</HintPath>
@@ -198,6 +207,7 @@
     <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>packages\System.Runtime.CompilerServices.Unsafe.6.1.2\lib\net462\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
     </Reference>
+    <Reference Include="System.Security" />
     <Reference Include="System.Security.AccessControl, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>packages\System.Security.AccessControl.6.0.0\lib\net461\System.Security.AccessControl.dll</HintPath>
     </Reference>
@@ -225,6 +235,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Dispatcher.cs" />
+    <Compile Include="Logging\MailLog.cs" />
+    <Compile Include="Logging\Models\EmailLogSettings.cs" />
     <Compile Include="Services\AdService\Models\AdComputer.cs" />
     <Compile Include="Services\ComputerSyncService\ComputerCudDataAdapter.cs" />
     <Compile Include="Services\ComputerSyncService\Models\ComputerStatus.cs" />
@@ -249,6 +261,7 @@
     <Compile Include="Services\UserSyncService\Models\UserSyncServiceSettings.cs" />
     <Compile Include="Services\UserSyncService\UserCudDataAdapter.cs" />
     <Compile Include="Services\UserSyncService\UserSyncService.cs" />
+    <Compile Include="Logging\StringBuilderSink.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

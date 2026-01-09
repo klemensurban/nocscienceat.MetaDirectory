@@ -2,33 +2,39 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using nocscienceat.MetaDirectory;
+using nocscienceat.MetaDirectory.Logging;
 using nocscienceat.MetaDirectory.Services.AdService;
+using nocscienceat.MetaDirectory.Services.ComputerSyncService;
+using nocscienceat.MetaDirectory.Services.IdmDeviceService;
 using nocscienceat.MetaDirectory.Services.IdmUserService;
 using nocscienceat.MetaDirectory.Services.UserSyncService;
 using Serilog;
 using System;
+using System.Text;
 using System.Threading;
-using nocscienceat.MetaDirectory.Services.ComputerSyncService;
-using nocscienceat.MetaDirectory.Services.IdmDeviceService;
+
+IConfiguration? config = null;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .CreateBootstrapLogger();
 
+StringBuilder logInfo = new();
+
 try
 {
     IHost host = Host.CreateDefaultBuilder(args)
 
-        .ConfigureAppConfiguration((_, config) =>
+        .ConfigureAppConfiguration((_, configuration) =>
         {
-            config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+            configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .AddJsonFile("secrets.json", optional: true, reloadOnChange: true)
                 .AddEnvironmentVariables()
                 .AddCommandLine(args);
         })
         .ConfigureServices((context, services) =>
         {
-            IConfiguration config = context.Configuration;
+            config = context.Configuration;
             services.AddSingleton(config);
 
             services.AddSingleton<IUserSyncService, UserSyncService>();
@@ -44,7 +50,8 @@ try
             loggerConfiguration
                 .ReadFrom.Configuration(context.Configuration)
                 .ReadFrom.Services(services)
-                .Enrich.FromLogContext();
+                .Enrich.FromLogContext()
+                .WriteTo.Sink(new StringBuilderSink(logInfo));
         })
         .Build();
 
@@ -64,4 +71,7 @@ catch (Exception ex)
 finally
 {
     Log.CloseAndFlush();
+
+    await MailLog.Send(config, logInfo);
 }
+

@@ -72,7 +72,7 @@ namespace nocscienceat.MetaDirectory.Services.UserSyncService
                 return;
             }
 
-            CudManager<string, IdmUser, AdUser> userCudManager = new(new UserCudDataAdapter(_userSyncServiceSettings.UserCudadapter, _logger), sourceItems: idmUsers, sync2Items: adUsers);
+            CudManager<string, IdmUser, AdUser> userCudManager = new(new UserCudDataAdapter(_userSyncServiceSettings.CudAdapter, _logger), sourceItems: idmUsers, sync2Items: adUsers);
             userCudManager.CheckItems();
             foreach (var itemLink in userCudManager.Items2Update)
             {
@@ -91,6 +91,8 @@ namespace nocscienceat.MetaDirectory.Services.UserSyncService
                 else
                     _logger.LogWarning("IDM user not found in specified AD OUs: {Sn} {GivenName}, SapPersNr: {SapPersNr}", item.Sn, item.GivenName, item.SapPersNr);
             }
+            _logger.LogInformation("Number of accounts in sync: {insync}", userCudManager.ItemsInSyncCount);
+            _logger.LogInformation("Number of accounts updated: {updated}", userCudManager.Items2UpdateCount);
 
         }
     }
