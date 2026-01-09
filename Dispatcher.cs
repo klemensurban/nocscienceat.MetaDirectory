@@ -7,6 +7,9 @@ using nocscienceat.MetaDirectory.Services.ComputerSyncService;
 
 namespace nocscienceat.MetaDirectory
 {
+    /// <summary>
+    /// Central coordinator that triggers all registered sync services in sequence.
+    /// </summary>
     public class Dispatcher
     {
         private readonly IConfiguration _configuration;
@@ -15,6 +18,9 @@ namespace nocscienceat.MetaDirectory
         private readonly IComputerSyncService _computerSyncService;
 
         // ReSharper disable once ConvertToPrimaryConstructor
+        /// <summary>
+        /// Captures infrastructure services and concrete sync pipelines.
+        /// </summary>
         public Dispatcher(IConfiguration configuration, ILogger<Dispatcher> logger, IUserSyncService userSyncService, IComputerSyncService computerSyncService)
         {
             _configuration = configuration;
@@ -23,11 +29,12 @@ namespace nocscienceat.MetaDirectory
             _computerSyncService = computerSyncService;
         }
 
+        /// <summary>
+        /// Executes user and computer synchronization jobs; currently sequential with no cancellation logic.
+        /// </summary>
         public async Task<Task> ExecuteAsync(CancellationToken stoppingToken)
         {
             await _userSyncService.SyncUsersAsync();
-
-            // Sync Computer-Account Status in the future here as well
 
             await _computerSyncService.SyncComputersAsync();
 

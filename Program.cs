@@ -60,7 +60,7 @@ try
     {
         Log.Information("Application Starting {dt}", DateTime.UtcNow);
         Dispatcher dispatcher = host.Services.GetRequiredService<Dispatcher>();
-        await dispatcher.ExecuteAsync(CancellationToken.None); // Run main synchronization pipeline
+        await dispatcher.ExecuteAsync(CancellationToken.None);                  // Run main synchronization pipeline
         Log.Information("Application Ending {dt}", DateTime.UtcNow);
     }
 

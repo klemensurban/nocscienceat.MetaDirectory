@@ -1,4 +1,5 @@
 ﻿using MailKit.Net.Smtp;
+using MailKit.Security;
 using Microsoft.Extensions.Configuration;
 using MimeKit;
 using nocscienceat.MetaDirectory.Logging.Models;
@@ -16,9 +17,7 @@ namespace nocscienceat.MetaDirectory.Logging
                 return;
 
             EmailLogSettings emailSettings = configuration?.GetSection("EmailLog").Get<EmailLogSettings>() ?? new EmailLogSettings();
-
-
-
+            
             if (!TimeSpan.TryParse(emailSettings.WindowStart, out TimeSpan startTime))
             {
                 startTime = new TimeSpan(8, 15, 0);
@@ -42,9 +41,9 @@ namespace nocscienceat.MetaDirectory.Logging
                 return;
             }
 
-            if (!Enum.TryParse(emailSettings.SecureSocketOption, out MailKit.Security.SecureSocketOptions secureSocketOption))
+            if (!Enum.TryParse(emailSettings.SecureSocketOption, out SecureSocketOptions secureSocketOption))
             {
-                secureSocketOption = MailKit.Security.SecureSocketOptions.None;
+                secureSocketOption = SecureSocketOptions.None;
             }
 
             MimeMessage message = new();
@@ -57,6 +56,8 @@ namespace nocscienceat.MetaDirectory.Logging
             };
 
             using SmtpClient client = new();
+            if (secureSocketOption is SecureSocketOptions.StartTls or SecureSocketOptions.SslOnConnect or SecureSocketOptions.StartTlsWhenAvailable)
+                client.ServerCertificateValidationCallback = (s, c, h, e) => true;
             await client.ConnectAsync(emailSettings.SmtpHost, emailSettings.Port, secureSocketOption);
             await client.SendAsync(message);
             await client.DisconnectAsync(true);
