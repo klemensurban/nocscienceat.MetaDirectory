@@ -9,11 +9,13 @@ using System.Text;
 
 namespace nocscienceat.MetaDirectory.Services.AdService
 {
+    /// <summary>
+    /// Provides low-level Active Directory access for users and computers, including read and write helpers.
+    /// </summary>
     public class AdService : IAdService
     {
         private readonly AdServiceSettings _adServiceSettings;
-        private readonly ILogger<AdService> _logger;
-
+        private readonly ILogger<AdService> _logger; 
         private const string AttributeNameStreetAddress = "extensionAttribute5";
         private const string AttributeNameRoom = "extensionAttribute6";
         private const string AttributeNameTopLevelUnits = "extensionAttribute7";
@@ -31,6 +33,9 @@ namespace nocscienceat.MetaDirectory.Services.AdService
         private const string AttributeNameComputerStatus = "extensionAttribute10";
         private const string AttributeNameComputerName = "name";
 
+        /// <summary>
+        /// Loads AD-related configuration and captures a logger for diagnostics.
+        /// </summary>
         public AdService(IConfiguration configuration, ILogger<AdService> logger)
         {
             _adServiceSettings = configuration.GetSection("AdService").Get<AdServiceSettings>() ??
@@ -38,6 +43,9 @@ namespace nocscienceat.MetaDirectory.Services.AdService
             _logger = logger;
         }
 
+        /// <summary>
+        /// Enumerates user search roots, querying AD and mapping each entry to <see cref="AdUser"/>.
+        /// </summary>
         public List<AdUser> GetAdUsers()
         {
             List<AdUser> adUsers = new();
@@ -74,6 +82,9 @@ namespace nocscienceat.MetaDirectory.Services.AdService
             }
         }
 
+        /// <summary>
+        /// Reads the first value of a directory property or returns null if missing.
+        /// </summary>
         private static string? GetPropertyValue(SearchResult searchResult, string propertyName)
         {
             return searchResult.Properties[propertyName]?.Count > 0
@@ -81,6 +92,9 @@ namespace nocscienceat.MetaDirectory.Services.AdService
                 : null;
         }
 
+        /// <summary>
+        /// Maps <see cref="SearchResult"/> values to a strongly typed <see cref="AdUser"/>.
+        /// </summary>
         private static AdUser MapSearchResult2AdUser(SearchResult searchResult)
         {
             AdUser adUser = new()
@@ -103,6 +117,9 @@ namespace nocscienceat.MetaDirectory.Services.AdService
             return adUser;
         }
 
+        /// <summary>
+        /// Writes selected AD user attributes, committing only when needed.
+        /// </summary>
         public void UpdateAdUser(AdUser adUserUpdated, IEnumerable<string> attributeNames)
         {
             try
@@ -184,6 +201,9 @@ namespace nocscienceat.MetaDirectory.Services.AdService
             }
         }
 
+        /// <summary>
+        /// Queries configured OUs for computer accounts and maps them to <see cref="AdComputer"/>.
+        /// </summary>
         public List<AdComputer> GetAdComputers()
         {
             List<AdComputer> adComputers = new();
@@ -219,6 +239,9 @@ namespace nocscienceat.MetaDirectory.Services.AdService
             }
         }
 
+        /// <summary>
+        /// Updates AD computer attributes and commits changes when at least one attribute was modified.
+        /// </summary>
         public void UpdateAdComputer(AdComputer adComputerUpdated, IEnumerable<string> attributeNames)
         {
             try
@@ -264,6 +287,9 @@ namespace nocscienceat.MetaDirectory.Services.AdService
             }
         }
 
+        /// <summary>
+        /// Maps a directory search result to the simplified <see cref="AdComputer"/> model.
+        /// </summary>
         private AdComputer MapSearchResult2AdComputer(SearchResult searchResult)
         {
             AdComputer adComputer = new()
@@ -276,7 +302,9 @@ namespace nocscienceat.MetaDirectory.Services.AdService
             return adComputer;
         }
 
-
+        /// <summary>
+        /// Sets or clears an attribute directly on a directory entry.
+        /// </summary>
         private static void UpdateAttribute(DirectoryEntry directoryEntry, string attributeName, string? attributeValue)
         {
             if (attributeValue is not null)

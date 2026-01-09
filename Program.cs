@@ -17,9 +17,9 @@ IConfiguration? config = null;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
-    .CreateBootstrapLogger();
+    .CreateBootstrapLogger(); // Bootstrap logger for early-start logging before full configuration
 
-StringBuilder logInfo = new();
+StringBuilder logInfo = new(); // In-memory log buffer used for emailing execution logs
 
 try
 {
@@ -30,20 +30,21 @@ try
             configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .AddJsonFile("secrets.json", optional: true, reloadOnChange: true)
                 .AddEnvironmentVariables()
-                .AddCommandLine(args);
+                .AddCommandLine(args); // Aggregate configuration from multiple sources
         })
         .ConfigureServices((context, services) =>
         {
             config = context.Configuration;
-            services.AddSingleton(config);
+            services.AddSingleton(config); // Expose configuration via DI
 
+            // Register synchronization and directory services
             services.AddSingleton<IUserSyncService, UserSyncService>();
             services.AddSingleton<IIdmUserService, IdmUserService>();
             services.AddSingleton<IAdService, AdService>();
             services.AddSingleton<IComputerSyncService, ComputerSyncService>();
             services.AddSingleton<IIdmDeviceService, IdmDeviceService>();
 
-            services.AddSingleton<Dispatcher>();
+            services.AddSingleton<Dispatcher>(); // Central dispatcher orchestrating the sync workflow
         })
         .UseSerilog((context, services, loggerConfiguration) =>
         {
@@ -51,7 +52,7 @@ try
                 .ReadFrom.Configuration(context.Configuration)
                 .ReadFrom.Services(services)
                 .Enrich.FromLogContext()
-                .WriteTo.Sink(new StringBuilderSink(logInfo));
+                .WriteTo.Sink(new StringBuilderSink(logInfo)); // Mirror logs into StringBuilder for email reporting
         })
         .Build();
 
@@ -59,19 +60,19 @@ try
     {
         Log.Information("Application Starting {dt}", DateTime.UtcNow);
         Dispatcher dispatcher = host.Services.GetRequiredService<Dispatcher>();
-        await dispatcher.ExecuteAsync(CancellationToken.None);
+        await dispatcher.ExecuteAsync(CancellationToken.None); // Run main synchronization pipeline
         Log.Information("Application Ending {dt}", DateTime.UtcNow);
     }
 
 }
 catch (Exception ex)
 {
-    Log.Fatal(ex, "Host terminated unexpectedly");
+    Log.Fatal(ex, "Host terminated unexpectedly"); // Critical failure logging
 }
 finally
 {
     Log.CloseAndFlush();
 
-    await MailLog.Send(config, logInfo);
+    await MailLog.Send(config, logInfo); // Email accumulated log information after shutdown
 }
 

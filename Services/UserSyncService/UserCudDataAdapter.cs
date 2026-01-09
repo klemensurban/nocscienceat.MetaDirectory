@@ -9,17 +9,26 @@ using System.Collections.Generic;
 
 namespace nocscienceat.MetaDirectory.Services.UserSyncService
 {
+    /// <summary>
+    /// Bridges IDM users with AD users by describing how to diff and key entities for the CUD engine.
+    /// </summary>
     internal class UserCudDataAdapter: ICudDataAdapter<string, IdmUser, AdUser>
     {
         private readonly UserCudadapterOptions _options;
         private readonly ILogger<UserSyncService> _logger;
 
+        /// <summary>
+        /// Captures adapter behavior (per-field rules) plus the parent service logger.
+        /// </summary>
         public UserCudDataAdapter(UserCudadapterOptions options, ILogger<UserSyncService> logger)
         {
             _options = options;
             _logger = logger;
         }
 
+        /// <summary>
+        /// Compares IDM and AD users, respecting per-field sync policy and returning the updated AD projection.
+        /// </summary>
         public ComparisonResult<AdUser> Compare(IdmUser sourceItem, AdUser sync2Item)
         {
             List<string> differingProps = new();
@@ -27,6 +36,7 @@ namespace nocscienceat.MetaDirectory.Services.UserSyncService
             // Create with original as Template for DN and SAMAccountName retention
             AdUser sync2ItemUpdated = new(sync2Item);
 
+            // Each branch below honors the configured sync policy (Sync/Ignore/Debug/Warn) for the property.
             if (!string.Equals(sourceItem.GivenName, sync2Item.GivenName))
             {
                 switch (_options.GivenName)
@@ -143,7 +153,7 @@ namespace nocscienceat.MetaDirectory.Services.UserSyncService
             }
            
 
-            // Check if sourceItem.Room is not null and equals "999"
+            // Normalize room + street: some room codes signal that both fields must be cleared.
             string? room;
             string? streetAddress;
 
@@ -189,17 +199,24 @@ namespace nocscienceat.MetaDirectory.Services.UserSyncService
                 differingProps.Add(nameof(sync2ItemUpdated.BpkBf));
             }
 
+            // ComparisonResult<T> behaves like a discriminated union where consumers inspect which nested type was returned to decide whether to update AD or skip the write.
             if (differingProps.Count == 0)
                 return new ComparisonResult<AdUser>.IsEqual();
 
             return new ComparisonResult<AdUser>.DiffersBy { Properties = differingProps, SyncItemUpdated = sync2ItemUpdated };
         }
 
+        /// <summary>
+        /// Provides the unique IDM key (SAP personnel number) to the CUD framework.
+        /// </summary>
         public string GetKeyFromSourceItem(IdmUser sourceItem)
         {
             return sourceItem.SapPersNr;
         }
 
+        /// <summary>
+        /// Extracts the SAP personnel number from AD, ensuring it is present for matching.
+        /// </summary>
         public string GetKeyFromSync2Item(AdUser sync2Item)
         {
             return sync2Item.SapPersNr is null ? throw new ArgumentException("Sync2 item does not have a SapPersNr.") : sync2Item.SapPersNr.Trim();

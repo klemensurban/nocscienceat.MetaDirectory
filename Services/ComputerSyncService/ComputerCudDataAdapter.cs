@@ -10,6 +10,10 @@ using System.Text.Json;
 
 namespace nocscienceat.MetaDirectory.Services.ComputerSyncService
 {
+    /// <summary>
+    /// Maps IDM computer state to AD computer status blobs for the CRUD engine.
+    /// Handles diffing and key extraction only.
+    /// </summary>
     internal class ComputerCudDataAdapter : ICudDataAdapter<string, IdmComputer, AdComputer>
     {
         private readonly ILogger<ComputerSyncService> _logger;
@@ -19,6 +23,9 @@ namespace nocscienceat.MetaDirectory.Services.ComputerSyncService
             _logger = logger;
         }
 
+        /// <summary>
+        /// Compares IDM and AD computer representations, returning updated AD payload if differences exist.
+        /// </summary>
         public ComparisonResult<AdComputer> Compare(IdmComputer sourceItem, AdComputer sync2Item)
         {
             List<string> differingProps = new();
@@ -26,6 +33,7 @@ namespace nocscienceat.MetaDirectory.Services.ComputerSyncService
 
             bool updateAdComputerstatus = false;
 
+            // Deserialize the status JSON stored in AD. If missing or malformed, start from a clean slate.
             ComputerStatus computerStatus;
 
             if (string.IsNullOrWhiteSpace(sync2Item.Status))
@@ -44,6 +52,7 @@ namespace nocscienceat.MetaDirectory.Services.ComputerSyncService
                 }
             }
 
+            // Map each IDM field into the status blob; mark update when any field changes.
             if (!string.Equals(sourceItem.Status, computerStatus.Status))
             {
                 computerStatus.Status = sourceItem.Status;
@@ -69,6 +78,7 @@ namespace nocscienceat.MetaDirectory.Services.ComputerSyncService
                 updateAdComputerstatus = true;
             }
 
+            // Write the serialized blob back to AD Attribute when any property changed.
             if (updateAdComputerstatus)
             {
                 differingProps.Add(nameof(sync2ItemUpdated.Status));
@@ -78,6 +88,7 @@ namespace nocscienceat.MetaDirectory.Services.ComputerSyncService
                 });
             }
 
+            // ComparisonResult<T> behaves like a discriminated union where consumers inspect which nested type was returned to decide whether to update AD or skip the write.
             if (differingProps.Count == 0)
                 return new ComparisonResult<AdComputer>.IsEqual();
 

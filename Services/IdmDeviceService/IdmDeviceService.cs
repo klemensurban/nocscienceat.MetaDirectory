@@ -16,6 +16,9 @@ namespace nocscienceat.MetaDirectory.Services.IdmDeviceService
 
         private readonly IdmDeviceServiceSettings _idmDeviceServiceSettings;
 
+        /// <summary>
+        /// Binds settings from configuration and initializes logging plus default device status.
+        /// </summary>
         public IdmDeviceService(IConfiguration configuration, ILogger<IdmDeviceService> logger)
         {
             _logger = logger;
@@ -25,6 +28,9 @@ namespace nocscienceat.MetaDirectory.Services.IdmDeviceService
             DefaultStatus = _idmDeviceServiceSettings.DefaultStatus ?? "Inaktiv";
         }
 
+        /// <summary>
+        /// Queries the CMDB view for devices that have a MAC-to-name mapping and shapes results into <see cref="IdmComputer"/>.
+        /// </summary>
         public async Task<IEnumerable<IdmComputer>> GetComputersAsync()
         {
             const string sql =

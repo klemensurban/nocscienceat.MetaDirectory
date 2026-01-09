@@ -1,9 +1,6 @@
-﻿using System;
+﻿using nocscienceat.MetaDirectory.Services.IdmDeviceService.Models;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using nocscienceat.MetaDirectory.Services.IdmDeviceService.Models;
 
 namespace nocscienceat.MetaDirectory.Services.IdmDeviceService
 {

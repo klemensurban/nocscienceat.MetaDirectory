@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace nocscienceat.MetaDirectory.Services.IdmDeviceService.Models
+﻿namespace nocscienceat.MetaDirectory.Services.IdmDeviceService.Models
 {
     public class IdmDeviceServiceSettings
     {

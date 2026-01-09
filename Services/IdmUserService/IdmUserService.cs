@@ -9,13 +9,22 @@ using System.Threading.Tasks;
 
 namespace nocscienceat.MetaDirectory.Services.IdmUserService
 {
+    /// <summary>
+    /// Retrieves IDM users from the configured database and exposes them to the synchronization pipeline.
+    /// </summary>
     public class IdmUserService : IIdmUserService
     {
+        /// <summary>
+        /// Global prefix applied whenever <see cref="IdmUser.BpkBf"/> is normalized; populated from configuration.
+        /// </summary>
         public static string BpkPrefix = null!;
 
         private readonly IdmUserServiceSettings _idmUserServiceSettings;
         private readonly ILogger<IdmUserService> _logger;
 
+        /// <summary>
+        /// Loads service settings from configuration and initializes logging plus static prefix metadata.
+        /// </summary>
         public IdmUserService(IConfiguration configuration, ILogger<IdmUserService> logger)
         {
             _idmUserServiceSettings =
@@ -26,6 +35,9 @@ namespace nocscienceat.MetaDirectory.Services.IdmUserService
             BpkPrefix = _idmUserServiceSettings.BpkPrefix ?? "BF:";
         }
 
+        /// <summary>
+        /// Executes the IDM export view and materializes normalized <see cref="IdmUser"/> records.
+        /// </summary>
         public async Task<IEnumerable<IdmUser>> GetUsersAsync()
         {
             const string sql =
@@ -42,10 +54,8 @@ namespace nocscienceat.MetaDirectory.Services.IdmUserService
             try
             {
                 SqlConnection connection = new(_idmUserServiceSettings.ConnectionString!);
-                using (connection)
-                {
-                    return await connection.QueryAsync<IdmUser>(sql);
-                }
+                using SqlConnection sqlConnection = connection;
+                return await connection.QueryAsync<IdmUser>(sql);
             }
             catch (Exception ex)
             {
