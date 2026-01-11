@@ -32,13 +32,12 @@ namespace nocscienceat.MetaDirectory
         /// <summary>
         /// Executes user and computer synchronization jobs; currently sequential with no cancellation logic.
         /// </summary>
-        public async Task<Task> ExecuteAsync(CancellationToken stoppingToken)
+        public async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             await _userSyncService.SyncUsersAsync();
 
             await _computerSyncService.SyncComputersAsync();
 
-            return Task.CompletedTask;
         }
     }
 }
