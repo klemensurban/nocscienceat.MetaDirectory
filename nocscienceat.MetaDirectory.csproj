@@ -247,7 +247,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="C# Dispatcher.cs" />
     <Compile Include="Dispatcher.cs" />
     <Compile Include="Logging\MailLog.cs" />
     <Compile Include="Logging\Models\EmailLogSettings.cs" />
