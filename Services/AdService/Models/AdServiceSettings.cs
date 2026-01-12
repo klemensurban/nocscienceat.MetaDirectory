@@ -4,15 +4,13 @@ namespace nocscienceat.MetaDirectory.Services.AdService.Models
 {
     public class AdServiceSettings
     {
-        public DirectorySearch[] UserOUs { get; set; } = Array.Empty<DirectorySearch>();
-        public DirectorySearch[] ComputerOUs { get; set; } = Array.Empty<DirectorySearch>();
+        public DirectorySearchDefinition[] UserOUs { get; set; } = Array.Empty<DirectorySearchDefinition>();
+        public DirectorySearchDefinition[] ComputerOUs { get; set; } = Array.Empty<DirectorySearchDefinition>();
     }
 
-    public class DirectorySearch
+    public class DirectorySearchDefinition
     {
         public string Dn { get; set; } = null!;
         public bool SearchScopeSubtree { get; set; }
-
-
     }
 }

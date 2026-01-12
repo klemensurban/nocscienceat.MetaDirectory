@@ -51,7 +51,7 @@ namespace nocscienceat.MetaDirectory.Services.AdService
             List<AdUser> adUsers = new();
             try
             {
-                foreach (DirectorySearch directorySearch in _adServiceSettings.UserOUs)
+                foreach (DirectorySearchDefinition directorySearch in _adServiceSettings.UserOUs)
                 {
                     using PrincipalContext ctx = new(ContextType.Domain, null, directorySearch.Dn);
                     using PrincipalSearcher principalSearcher = new();
@@ -209,7 +209,7 @@ namespace nocscienceat.MetaDirectory.Services.AdService
             List<AdComputer> adComputers = new();
             try
             {
-                foreach (DirectorySearch directorySearch in _adServiceSettings.ComputerOUs)
+                foreach (DirectorySearchDefinition directorySearch in _adServiceSettings.ComputerOUs)
                 {
                     using PrincipalContext ctx = new(ContextType.Domain, null, directorySearch.Dn);
                     using PrincipalSearcher principalSearcher = new();

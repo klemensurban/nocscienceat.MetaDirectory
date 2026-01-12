@@ -262,6 +262,7 @@
     <Compile Include="Services\AdService\IAdService.cs" />
     <Compile Include="Services\AdService\Models\AdServiceSettings.cs" />
     <Compile Include="Services\AdService\Models\AdUser.cs" />
+    <Compile Include="Services\ComputerSyncService\Models\ComputerSyncServiceSettings.cs" />
     <Compile Include="Services\IdmDeviceService\IdmDeviceService.cs" />
     <Compile Include="Services\IdmDeviceService\IIdmDeviceService.cs" />
     <Compile Include="Services\IdmDeviceService\Models\IdmComputer.cs" />

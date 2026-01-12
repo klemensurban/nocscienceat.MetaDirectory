@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using System;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using nocscienceat.CudManager2;
 using nocscienceat.MetaDirectory.Services.AdService;
@@ -39,8 +40,8 @@ namespace nocscienceat.MetaDirectory.Services.UserSyncService
         public async Task SyncUsersAsync()
         {
             // Prepare lookup helpers for ignore lists and duplicate detection.
-            HashSet<string> samAccountNamesToIgnore = new(_userSyncServiceSettings.SamAccountNamesToIgnore);
-            HashSet<string> sapPersNumbersToIgnore = new(_userSyncServiceSettings.SapPersNumbersToIgnore);
+            HashSet<string> samAccountNamesToIgnore = new(_userSyncServiceSettings.SamAccountNamesToIgnore, StringComparer.OrdinalIgnoreCase);
+            HashSet<string> sapPersNumbersToIgnore = new(_userSyncServiceSettings.SapPersNumbersToIgnore, StringComparer.OrdinalIgnoreCase);
             HashSet<string> seenSapPersNr = new();
 
             // Retrieve user collections from IDM and AD.
