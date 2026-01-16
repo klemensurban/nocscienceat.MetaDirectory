@@ -4,7 +4,6 @@ using Microsoft.Extensions.Configuration;
 using MimeKit;
 using nocscienceat.MetaDirectory.Logging.Models;
 using System;
-using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
