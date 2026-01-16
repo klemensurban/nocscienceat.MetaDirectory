@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace nocscienceat.MetaDirectory.Logging.Models
 {
@@ -15,7 +16,7 @@ namespace nocscienceat.MetaDirectory.Logging.Models
         /// <summary>
         /// Array of recipient email addresses for log distribution.
         /// </summary>
-        public List<string>? To { get; set; }
+        public List<string> To { get; set; } = new List<string>();
 
         /// <summary>
         /// Email subject line (defaults to generic message if not set).

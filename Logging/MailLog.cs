@@ -49,11 +49,6 @@ namespace nocscienceat.MetaDirectory.Logging
 
             // Extract and validate all recipients; skip null, empty, or whitespace entries.
 
-            if (emailSettings.To is null)
-            {
-                return;
-            }
-
             for (int index = emailSettings.To.Count - 1; index >= 0; index--)
             {
                 string recipient = emailSettings.To[index];
@@ -82,7 +77,17 @@ namespace nocscienceat.MetaDirectory.Logging
             // Add all validated recipients to the message.
             foreach (string recipient in emailSettings.To)
             {
-                message.To.Add(MailboxAddress.Parse(recipient));
+                try
+                {
+                    message.To.Add(MailboxAddress.Parse(recipient));
+                }
+                catch { // ignored
+                }
+            }
+
+            if (message.To.Count == 0)
+            {
+                return;
             }
 
             message.Subject = string.IsNullOrWhiteSpace(emailSettings.Subject) ? "Logs from nocscienceat.MetaDirectory" : emailSettings.Subject;
