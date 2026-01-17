@@ -37,7 +37,7 @@ namespace nocscienceat.MetaDirectory.Logging
             TimeSpan currentTime = DateTime.UtcNow.TimeOfDay;
             if (currentTime < startTime || currentTime > endTime)
             {
-                //return;
+                return;
             }
 
             // Validate sender and SMTP host.
