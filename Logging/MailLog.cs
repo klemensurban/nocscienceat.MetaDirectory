@@ -37,31 +37,12 @@ namespace nocscienceat.MetaDirectory.Logging
             TimeSpan currentTime = DateTime.UtcNow.TimeOfDay;
             if (currentTime < startTime || currentTime > endTime)
             {
-                return;
+                //return;
             }
 
             // Validate sender and SMTP host.
             if (string.IsNullOrWhiteSpace(emailSettings.From) ||
                 string.IsNullOrWhiteSpace(emailSettings.SmtpHost))
-            {
-                return;
-            }
-
-            // Extract and validate all recipients; skip null, empty, or whitespace entries.
-
-            for (int index = emailSettings.To.Count - 1; index >= 0; index--)
-            {
-                string recipient = emailSettings.To[index];
-                if (!string.IsNullOrWhiteSpace(recipient))
-                {
-                    emailSettings.To[index] = recipient.Trim();
-                    continue;
-                }
-                emailSettings.To.RemoveAt(index);
-            }
-
-            // Cancel email delivery if no valid recipients remain after validation.
-            if (emailSettings.To.Count == 0)
             {
                 return;
             }
@@ -77,12 +58,13 @@ namespace nocscienceat.MetaDirectory.Logging
             // Add all validated recipients to the message.
             foreach (string recipient in emailSettings.To)
             {
+                if (string.IsNullOrWhiteSpace(recipient)) continue;
                 try
                 {
-                    message.To.Add(MailboxAddress.Parse(recipient));
+                    message.To.Add(MailboxAddress.Parse(recipient.Trim()));
                 }
-                catch { // ignored
-                }
+                // ReSharper disable once EmptyGeneralCatchClause
+                catch {}
             }
 
             if (message.To.Count == 0)
